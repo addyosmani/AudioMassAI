@@ -1,0 +1,13 @@
+{
+  "name": "audiomass",
+  "version": "1.0.0",
+  "description": "Free full-featured web-based audio & waveform editing tool",
+  "scripts": {
+    "start": "http-server src -p 5055",
+    "build": "cd src && cat app.js dist/wavesurfer.js dist/plugin/wavesurfer.regions.js oneup.js keys.js contextmenu.js ui-fx.js ui.js modal.js state.js engine.js actions.js drag.js recorder.js welcome.js fx-pg-eq.js fx-auto.js local.js id3.js lzma.js | uglifyjs -c -m -o all.build.js"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "uglify-js": "^3.17.4"
+  }
+}
