@@ -93,13 +93,31 @@
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
 							body: `<textarea readonly style="width: 100%; height: 200px;">${output.text}</textarea>`,
-							buttons: [{
-								title: 'Close',
-								clss: 'pk_modal_a_accpt',
-								callback: function (modal_instance) {
-									modal_instance.Destroy();
+							buttons: [
+								{
+									title: 'Export',
+									clss: 'pk_modal_a_accpt',
+									callback: function (modal_instance) {
+										const text = modal_instance.el_body.querySelector('textarea').value;
+										const blob = new Blob([text], { type: 'text/plain' });
+										const url = URL.createObjectURL(blob);
+										const a = document.createElement('a');
+										a.href = url;
+										a.download = 'transcription.txt';
+										document.body.appendChild(a);
+										a.click();
+										document.body.removeChild(a);
+										URL.revokeObjectURL(url);
+									}
+								},
+								{
+									title: 'Close',
+									clss: 'pk_modal_a_accpt',
+									callback: function (modal_instance) {
+										modal_instance.Destroy();
+									}
 								}
-							}],
+							],
 							setup: function (modal_instance) {
 								q.ui.InteractionHandler.checkAndSet('modal');
 							}
@@ -113,8 +131,11 @@
 				};
 			
 				const audioBuffer = q.engine.wavesurfer.backend.buffer;
-				const channelData = audioBuffer.getChannelData(0);
-				worker.postMessage({ audio: channelData });
+				const audioData = {
+					audio: audioBuffer.getChannelData(0),
+					sampling_rate: audioBuffer.sampleRate,
+				};
+				worker.postMessage(audioData);
 			});
 
 			if (w.location.href.split('local=')[1]) {

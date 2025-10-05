@@ -18,9 +18,9 @@ class PipelineSingleton {
 }
 
 self.addEventListener('message', async (event) => {
-    const { audio } = event.data;
+    const audioData = event.data;
 
-    if (!audio) {
+    if (!audioData || !audioData.audio) {
         self.postMessage({
             status: 'error',
             message: 'No audio data received.',
@@ -35,7 +35,7 @@ self.addEventListener('message', async (event) => {
         });
 
         // Transcribe the audio
-        const output = await transcriber(audio, {
+        const output = await transcriber(audioData, {
             chunk_length_s: 30,
             stride_length_s: 5,
         });
