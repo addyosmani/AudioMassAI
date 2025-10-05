@@ -859,6 +859,23 @@
 							});
 							// ---
 						}
+					},
+					{
+						name: 'Transcribe (with AI)',
+						clss: 'pk_inact',
+						action: function () {
+							app.fireEvent('RequestTranscription');
+						},
+						setup: function ( obj ) {
+							obj.setAttribute('data-id', 'transcribe');
+
+							app.listenFor ('DidUnloadFile', function () {
+								obj.classList.add ('pk_inact');
+							});
+							app.listenFor ('DidLoadFile', function () {
+								obj.classList.remove ('pk_inact');
+							});
+						}
 					}
 				]
 			},

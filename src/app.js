@@ -65,6 +65,58 @@
 			q.rec    = new q._deps.rec ( q );
 			q.fls    = new q._deps.fls ( q );
 
+			q.listenFor('RequestTranscription', function () {
+				const worker = new Worker('transcription.js', {
+					type: 'module'
+				});
+			
+				const modal = new PKSimpleModal({
+					title: 'Transcribing Audio...',
+					clss: 'pk_modal_anim',
+					body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
+					setup: function (modal_instance) {
+						q.fireEvent('RequestPause');
+						q.ui.InteractionHandler.checkAndSet('modal');
+					}
+				});
+				modal.Show();
+			
+				worker.onmessage = (event) => {
+					const { status, output, message, progress } = event.data;
+			
+					if (status === 'progress') {
+						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
+						progressBar.style.width = `${progress}%`;
+					} else if (status === 'complete') {
+						modal.Destroy();
+						new PKSimpleModal({
+							title: 'Transcription',
+							clss: 'pk_modal_anim',
+							body: `<textarea readonly style="width: 100%; height: 200px;">${output.text}</textarea>`,
+							buttons: [{
+								title: 'Close',
+								clss: 'pk_modal_a_accpt',
+								callback: function (modal_instance) {
+									modal_instance.Destroy();
+								}
+							}],
+							setup: function (modal_instance) {
+								q.ui.InteractionHandler.checkAndSet('modal');
+							}
+						}).Show();
+						worker.terminate();
+					} else if (status === 'error') {
+						modal.Destroy();
+						q.fireEvent('ShowError', `Transcription failed: ${message}`);
+						worker.terminate();
+					}
+				};
+			
+				const audioBuffer = q.engine.wavesurfer.backend.buffer;
+				const channelData = audioBuffer.getChannelData(0);
+				worker.postMessage({ audio: channelData });
+			});
+
 			if (w.location.href.split('local=')[1]) {
 				var sess = w.location.href.split('local=')[1];
 

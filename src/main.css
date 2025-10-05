@@ -2016,3 +2016,19 @@ body.pk_stndln{
 .pk_aut{
     box-shadow: 0px 0px 20px #eee, inset 0px 0px 4px gold;
 }
+
+.pk_progress {
+    width: 100%;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+.pk_progress_bar {
+    width: 0%;
+    height: 20px;
+    background-color: #4CAF50;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 20px;
+    color: white;
+}
