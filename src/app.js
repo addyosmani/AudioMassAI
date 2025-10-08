@@ -85,11 +85,6 @@
 				worker.onmessage = (event) => {
 					const { status, output, message, progress } = event.data;
 
-					// console.log("ninja focus touch: output =>", output);
-					// console.log("ninja focus touch: progress =>", progress);
-					// console.log("ninja focus touch: status =>", status);
-					// console.log("ninja focus touch: message =>", message);
-			
 					if (status === 'progress') {
 						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
 						progressBar.style.width = `${progress}%`;
@@ -162,16 +157,6 @@
 						mono[i] /= numberOfChannels;
 					}
 				}
-
-				// optional normalization (helps with very quiet audio)
-				/*
-				let maxAmp = 0;
-				for (let i = 0; i < mono.length; i++) maxAmp = Math.max(maxAmp, Math.abs(mono[i]));
-				if (maxAmp > 0 && maxAmp < 0.1) {
-					const gain = 0.5 / maxAmp; // keep headroom
-					for (let i = 0; i < mono.length; i++) mono[i] *= gain;
-				}
-				*/
 
 				// Resample to 16kHz for Whisper
 				async function resampleTo16k(float32, fromRate) {
