@@ -60,7 +60,7 @@ self.addEventListener('message', async (event) => {
         });
 
         console.log('ninja focus touch: model =>', transcriber?.model?.name);
-        console.log('ninja focus touch: fe sr =>', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
+        console.log('ninja focus touch: feature extractor sampling rate =>', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
         console.log('ninja focus touch: out keys =>', Object.keys(output || {}));
         console.log('ninja focus touch: chunks =>', output?.chunks?.length, output?.chunks?.slice(0, 2));
         console.log('ninja focus touch: text =>', output?.text);

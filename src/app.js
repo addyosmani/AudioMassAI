@@ -131,30 +131,22 @@
 					}
 				};
 			
-				// const audioBuffer = q.engine.wavesurfer.backend.buffer;
-				// const audioData = {
-				// 	audio: audioBuffer.getChannelData(0),
-				// 	sampling_rate: audioBuffer.sampleRate,
-				// };
-				// worker.postMessage(audioData);
 				const audioBuffer = q.engine.wavesurfer.backend.buffer;
 				const { numberOfChannels, length, sampleRate } = audioBuffer;
-
-				console.log("ninja focus touch: numberOfChannels =>", numberOfChannels);
 
 				let mono = new Float32Array(length);
 				if (numberOfChannels === 1) {
 					mono.set(audioBuffer.getChannelData(0));
 				} else {
-					// average all channels
-					for (let ch = 0; ch < numberOfChannels; ch++) {
-						const chan = audioBuffer.getChannelData(ch);
-						for (let i = 0; i < length; i++) {
-							mono[i] += chan[i];
+					// Average all channels
+					for (let channel = 0; channel < numberOfChannels; channel++) {
+						const channelData = audioBuffer.getChannelData(channel);
+						for (let index = 0; index < length; index++) {
+							mono[index] += channelData[index];
 						}
 					}
-					for (let i = 0; i < length; i++) {
-						mono[i] /= numberOfChannels;
+					for (let index = 0; index < length; index++) {
+						mono[index] /= numberOfChannels;
 					}
 				}
 
@@ -170,8 +162,8 @@
 					const rendered = await ctx.startRendering();
 					return rendered.getChannelData(0).slice();
 				}
-				
 				const mono16k = await resampleTo16k(mono, sampleRate);
+				
 				worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 			});
 			// ninja focus touch >
