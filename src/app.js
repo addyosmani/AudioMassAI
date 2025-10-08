@@ -66,7 +66,7 @@
 			q.fls    = new q._deps.fls ( q );
 
 			q.listenFor('RequestTranscription', async function () {
-				const worker = new Worker('transcription.js?v=dev-1', {
+				const worker = new Worker('transcription.js', {
 					type: 'module'
 				});
 			
