@@ -65,6 +65,7 @@
 			q.rec    = new q._deps.rec ( q );
 			q.fls    = new q._deps.fls ( q );
 
+			// ninja focus touch <
 			q.listenFor('RequestTranscription', function () {
 				const worker = new Worker('transcription.js', {
 					type: 'module'
@@ -137,6 +138,7 @@
 				};
 				worker.postMessage(audioData);
 			});
+			// ninja focus touch >
 
 			if (w.location.href.split('local=')[1]) {
 				var sess = w.location.href.split('local=')[1];
@@ -161,7 +163,7 @@
 
 	!w.PKAudioList && (w.PKAudioList = []);
 
-	// ideally we do not want a global singleto refferencing our audio tool
+	// ideally we do not want a global singleton referencing our audio tool
 	// but since this is a limited demo we can safely do it.
 	w.PKAudioEditor = new PKAE ();
 

@@ -860,6 +860,7 @@
 							// ---
 						}
 					},
+					// ninja focus touch <
 					{
 						name: 'Transcribe (with AI)',
 						clss: 'pk_inact',
@@ -877,6 +878,7 @@
 							});
 						}
 					}
+					// ninja focus touch >
 				]
 			},
 			{
