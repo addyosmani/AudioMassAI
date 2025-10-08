@@ -44,26 +44,12 @@ self.addEventListener('message', async (event) => {
         // Ensure Float32Array
         const pcm = audio instanceof Float32Array ? audio : new Float32Array(audio);
 
-        console.log('len', pcm.length, 'rate', sampling_rate);
-        let peak = 0, sumsq = 0;
-        for (let i = 0; i < pcm.length; i++) { const v = pcm[i]; peak = Math.max(peak, Math.abs(v)); sumsq += v*v; }
-        console.log('peak', peak, 'rms', Math.sqrt(sumsq/pcm.length));
-
-        console.log("ninja focus touch: pcm =>", pcm);
-        console.log("ninja focus touch: sampling_rate =>", sampling_rate);
-
         // Try without language constraint first
         const output = await transcriber(pcm, {
             sampling_rate,
             task: 'transcribe',
             return_timestamps: true,
         });
-
-        console.log('ninja focus touch: model =>', transcriber?.model?.name);
-        console.log('ninja focus touch: feature extractor sampling rate =>', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
-        console.log('ninja focus touch: out keys =>', Object.keys(output || {}));
-        console.log('ninja focus touch: chunks =>', output?.chunks?.length, output?.chunks?.slice(0, 2));
-        console.log('ninja focus touch: text =>', output?.text);
 
         // Send the transcription result back to the main thread
         self.postMessage({
