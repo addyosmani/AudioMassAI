@@ -35,20 +35,15 @@ self.addEventListener('message', async (event) => {
             self.postMessage(progress);
         });
 
-        // Transcribe the audio
-        // const output = await transcriber(audioData, {
-        //     // chunk_length_s: 30,
-        //     // stride_length_s: 5,
-        // });
         const { audio, sampling_rate } = audioData;
         // Ensure Float32Array
         const pcm = audio instanceof Float32Array ? audio : new Float32Array(audio);
 
-        // Try without language constraint first
+        // Transcribe the audio
         const output = await transcriber(pcm, {
             sampling_rate,
-            task: 'transcribe',
-            return_timestamps: true,
+            chunk_length_s: 30,
+            stride_length_s: 5,
         });
 
         // Send the transcription result back to the main thread
