@@ -1,4 +1,3 @@
-// ninja focus touch <
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js';
 
 // Skip local model check
@@ -58,4 +57,3 @@ self.addEventListener('message', async (event) => {
         });
     }
 });
-// ninja focus touch >

@@ -576,12 +576,12 @@
 			app.fireEvent ('RequestDeselect');
 		}, 113);
 
-		// ninja focus touch <
+		// Enable F12 key for dev tools
 		// app.ui.KeyHandler.addCallback ('kF12', function ( k, i, e ) {
 		// 	e.preventDefault();
 		// 	e.stopPropagation();
 		// }, [123]);
-		// ninja focus touch >
+
 		/*app.ui.KeyHandler.addCallback ('kF5', function ( k, i, e ) {
 			e.preventDefault();
 			e.stopPropagation();

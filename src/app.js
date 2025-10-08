@@ -65,7 +65,6 @@
 			q.rec    = new q._deps.rec ( q );
 			q.fls    = new q._deps.fls ( q );
 
-			// ninja focus touch <
 			q.listenFor('RequestTranscription', async function () {
 				const worker = new Worker('transcription.js?v=dev-1', {
 					type: 'module'
@@ -163,10 +162,9 @@
 					return rendered.getChannelData(0).slice();
 				}
 				const mono16k = await resampleTo16k(mono, sampleRate);
-				
+
 				worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 			});
-			// ninja focus touch >
 
 			if (w.location.href.split('local=')[1]) {
 				var sess = w.location.href.split('local=')[1];

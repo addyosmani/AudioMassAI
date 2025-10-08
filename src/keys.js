@@ -79,11 +79,11 @@
 		w.addEventListener ('blur', function ( e ) {
 			q.keyMap = {};
 		}, false);
-		// ninja focus touch >
+
+		// Enable mouse right click
 		// d.addEventListener ('contextmenu', function( e ) {
 		// 	e.preventDefault();
 		// }, false);
-		// ninja focus touch >
 	};
 	
 	PKAE._deps.keyhandler = KeyHandler;
