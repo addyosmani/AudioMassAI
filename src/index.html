@@ -62,11 +62,29 @@
 -->
 	<script>
 		var editor = PKAudioEditor.init ('app');
-		if ('serviceWorker' in navigator) {
-			try {
-			//	navigator.serviceWorker.register( 'sw.js' );
-			} catch ( error ) {}
+		// ninja focus touch <
+		// if ('serviceWorker' in navigator) {
+		// 	try {
+		// 	//	navigator.serviceWorker.register( 'sw.js' );
+		// 	} catch ( error ) {}
+		// }
+		
+		// Only register SW in production (https and not localhost)
+		// if (location.protocol === 'https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+		// 	if ('serviceWorker' in navigator) {
+		// 		navigator.serviceWorker.register('sw.js').catch(() => {});
+		// 	}
+		// }
+		// Dev-only: ensure no Service Worker is active and clear caches
+		if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+			}
+			if (window.caches?.keys) {
+				caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+			}
 		}
+		// ninja focus touch >
 	</script>
 </body>
 </html>

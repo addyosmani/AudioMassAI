@@ -4,7 +4,7 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 // Skip local model check
 env.allowLocalModels = false;
 
-// Use the Singleton pattern to enable lazy construction of the pipeline.
+// Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
     static task = 'automatic-speech-recognition';
     static model = 'Xenova/whisper-tiny.en';
@@ -21,6 +21,8 @@ class PipelineSingleton {
 self.addEventListener('message', async (event) => {
     const audioData = event.data;
 
+    console.log("ninja focus touch: audioData 1 =>", audioData);
+
     if (!audioData || !audioData.audio) {
         self.postMessage({
             status: 'error',
@@ -35,18 +37,62 @@ self.addEventListener('message', async (event) => {
             self.postMessage(progress);
         });
 
+        // console.log("ninja focus touch: transcriber =>", transcriber);
+
         // Transcribe the audio
-        const output = await transcriber(audioData, {
-            chunk_length_s: 30,
-            stride_length_s: 5,
+        // const output = await transcriber(audioData, {
+        //     // chunk_length_s: 30,
+        //     // stride_length_s: 5,
+        // });
+        const { audio, sampling_rate } = audioData;
+        // Ensure Float32Array
+        const pcm = audio instanceof Float32Array ? audio : new Float32Array(audio);
+
+        console.log('len', pcm.length, 'rate', sampling_rate);
+        let peak = 0, sumsq = 0;
+        for (let i = 0; i < pcm.length; i++) { const v = pcm[i]; peak = Math.max(peak, Math.abs(v)); sumsq += v*v; }
+        console.log('peak', peak, 'rms', Math.sqrt(sumsq/pcm.length));
+
+        console.log("ninja focus touch: pcm =>", pcm);
+        console.log("ninja focus touch: sampling_rate =>", sampling_rate);
+
+        // Try without language constraint first
+        const output = await transcriber(pcm, {
+            sampling_rate,
+            task: 'transcribe',
+            return_timestamps: true,
+            // Most permissive settings to avoid filtering
+            no_speech_threshold: 0.1,
+            logprob_threshold: -3.0,
+            compression_ratio_threshold: 4.0,
+            condition_on_previous_text: false,
+            temperature: 0.0,
         });
+
+        console.log("ninja focus touch: audioData 2 =>", audioData);
+        console.log("ninja focus touch: output =>", output);
+
+        console.log('model', transcriber?.model?.name);
+        console.log('fe sr', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
+        console.log('out keys', Object.keys(output || {}));
+        console.log('chunks', output?.chunks?.length, output?.chunks?.slice(0, 2));
+        console.log('text', output?.text);
+        
+        // Fallback: manually join chunks if text is empty but chunks exist
+        let finalText = output?.text || '';
+        if (!finalText && output?.chunks?.length > 0) {
+            finalText = output.chunks.map(c => c?.text || '').join('');
+            console.log('manually joined text:', finalText);
+        }
 
         // Send the transcription result back to the main thread
         self.postMessage({
             status: 'complete',
-            output: output,
+            output: { ...output, text: finalText },
         });
     } catch (error) {
+        console.log("ninja focus touch: error =>", error);
+        console.log("ninja focus touch: error.message =>", error.message);
         self.postMessage({
             status: 'error',
             message: error.message,

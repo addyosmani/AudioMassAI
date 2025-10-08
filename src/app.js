@@ -66,8 +66,8 @@
 			q.fls    = new q._deps.fls ( q );
 
 			// ninja focus touch <
-			q.listenFor('RequestTranscription', function () {
-				const worker = new Worker('transcription.js', {
+			q.listenFor('RequestTranscription', async function () {
+				const worker = new Worker('transcription.js?v=dev-1', {
 					type: 'module'
 				});
 			
@@ -84,6 +84,11 @@
 			
 				worker.onmessage = (event) => {
 					const { status, output, message, progress } = event.data;
+
+					// console.log("ninja focus touch: output =>", output);
+					// console.log("ninja focus touch: progress =>", progress);
+					// console.log("ninja focus touch: status =>", status);
+					// console.log("ninja focus touch: message =>", message);
 			
 					if (status === 'progress') {
 						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
@@ -131,12 +136,58 @@
 					}
 				};
 			
+				// const audioBuffer = q.engine.wavesurfer.backend.buffer;
+				// const audioData = {
+				// 	audio: audioBuffer.getChannelData(0),
+				// 	sampling_rate: audioBuffer.sampleRate,
+				// };
+				// worker.postMessage(audioData);
 				const audioBuffer = q.engine.wavesurfer.backend.buffer;
-				const audioData = {
-					audio: audioBuffer.getChannelData(0),
-					sampling_rate: audioBuffer.sampleRate,
-				};
-				worker.postMessage(audioData);
+				const { numberOfChannels, length, sampleRate } = audioBuffer;
+
+				console.log("ninja focus touch: numberOfChannels =>", numberOfChannels);
+
+				let mono = new Float32Array(length);
+				if (numberOfChannels === 1) {
+					mono.set(audioBuffer.getChannelData(0));
+				} else {
+					// average all channels
+					for (let ch = 0; ch < numberOfChannels; ch++) {
+						const chan = audioBuffer.getChannelData(ch);
+						for (let i = 0; i < length; i++) {
+							mono[i] += chan[i];
+						}
+					}
+					for (let i = 0; i < length; i++) {
+						mono[i] /= numberOfChannels;
+					}
+				}
+
+				// optional normalization (helps with very quiet audio)
+				/*
+				let maxAmp = 0;
+				for (let i = 0; i < mono.length; i++) maxAmp = Math.max(maxAmp, Math.abs(mono[i]));
+				if (maxAmp > 0 && maxAmp < 0.1) {
+					const gain = 0.5 / maxAmp; // keep headroom
+					for (let i = 0; i < mono.length; i++) mono[i] *= gain;
+				}
+				*/
+
+				// Resample to 16kHz for Whisper
+				async function resampleTo16k(float32, fromRate) {
+					const ctx = new OfflineAudioContext(1, Math.ceil(float32.length * 16000 / fromRate), 16000);
+					const buffer = ctx.createBuffer(1, float32.length, fromRate);
+					buffer.copyToChannel(float32, 0);
+					const src = ctx.createBufferSource();
+					src.buffer = buffer;
+					src.connect(ctx.destination);
+					src.start();
+					const rendered = await ctx.startRendering();
+					return rendered.getChannelData(0).slice();
+				}
+				
+				const mono16k = await resampleTo16k(mono, sampleRate);
+				worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 			});
 			// ninja focus touch >
 
