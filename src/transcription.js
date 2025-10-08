@@ -57,12 +57,6 @@ self.addEventListener('message', async (event) => {
             sampling_rate,
             task: 'transcribe',
             return_timestamps: true,
-            // Most permissive settings to avoid filtering
-            no_speech_threshold: 0.1,
-            logprob_threshold: -3.0,
-            compression_ratio_threshold: 4.0,
-            condition_on_previous_text: false,
-            temperature: 0.0,
         });
 
         console.log('ninja focus touch: model =>', transcriber?.model?.name);
