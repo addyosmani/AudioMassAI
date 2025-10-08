@@ -2017,7 +2017,6 @@ body.pk_stndln{
     box-shadow: 0px 0px 20px #eee, inset 0px 0px 4px gold;
 }
 
-/* ninja focus touch < */
 .pk_progress {
     width: 100%;
     background-color: #ddd;
@@ -2033,4 +2032,3 @@ body.pk_stndln{
     line-height: 20px;
     color: white;
 }
-/* ninja focus touch > */

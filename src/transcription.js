@@ -21,8 +21,6 @@ class PipelineSingleton {
 self.addEventListener('message', async (event) => {
     const audioData = event.data;
 
-    console.log("ninja focus touch: audioData 1 =>", audioData);
-
     if (!audioData || !audioData.audio) {
         self.postMessage({
             status: 'error',
@@ -36,8 +34,6 @@ self.addEventListener('message', async (event) => {
         const transcriber = await PipelineSingleton.getInstance((progress) => {
             self.postMessage(progress);
         });
-
-        // console.log("ninja focus touch: transcriber =>", transcriber);
 
         // Transcribe the audio
         // const output = await transcriber(audioData, {
@@ -69,30 +65,18 @@ self.addEventListener('message', async (event) => {
             temperature: 0.0,
         });
 
-        console.log("ninja focus touch: audioData 2 =>", audioData);
-        console.log("ninja focus touch: output =>", output);
-
-        console.log('model', transcriber?.model?.name);
-        console.log('fe sr', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
-        console.log('out keys', Object.keys(output || {}));
-        console.log('chunks', output?.chunks?.length, output?.chunks?.slice(0, 2));
-        console.log('text', output?.text);
-        
-        // Fallback: manually join chunks if text is empty but chunks exist
-        let finalText = output?.text || '';
-        if (!finalText && output?.chunks?.length > 0) {
-            finalText = output.chunks.map(c => c?.text || '').join('');
-            console.log('manually joined text:', finalText);
-        }
+        console.log('ninja focus touch: model =>', transcriber?.model?.name);
+        console.log('ninja focus touch: fe sr =>', transcriber?.processor?.feature_extractor?.config?.sampling_rate);
+        console.log('ninja focus touch: out keys =>', Object.keys(output || {}));
+        console.log('ninja focus touch: chunks =>', output?.chunks?.length, output?.chunks?.slice(0, 2));
+        console.log('ninja focus touch: text =>', output?.text);
 
         // Send the transcription result back to the main thread
         self.postMessage({
             status: 'complete',
-            output: { ...output, text: finalText },
+            output: output,
         });
     } catch (error) {
-        console.log("ninja focus touch: error =>", error);
-        console.log("ninja focus touch: error.message =>", error.message);
         self.postMessage({
             status: 'error',
             message: error.message,
