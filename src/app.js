@@ -93,6 +93,10 @@
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
 							body: `<textarea readonly style="width: 100%; height: 200px;">${output.text}</textarea>`,
+							ondestroy: function (modal_instance) {
+								q.ui.InteractionHandler.on = false;
+								q.ui.KeyHandler.removeCallback('modalTemp');
+							},
 							buttons: [
 								{
 									title: 'Export',
@@ -120,6 +124,9 @@
 							],
 							setup: function (modal_instance) {
 								q.ui.InteractionHandler.checkAndSet('modal');
+								q.ui.KeyHandler.addCallback('modalTemp', function (e) {
+									modal_instance.Destroy();
+								}, [27]);
 							}
 						}).Show();
 						worker.terminate();
