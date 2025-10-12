@@ -170,9 +170,17 @@
 				}
 				const mono16k = await resampleTo16k(mono, sampleRate);
 
-				worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
+				if (
+					mono16k instanceof Float32Array &&
+					mono16k.buffer instanceof ArrayBuffer &&
+					mono16k.length > 0
+				) {
+					worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
+				} else {
+					console.error('Invalid audio buffer for transfer:', mono16k);
+				}
 			});
-
+			
 			if (w.location.href.split('local=')[1]) {
 				var sess = w.location.href.split('local=')[1];
 
