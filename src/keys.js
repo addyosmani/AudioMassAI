@@ -79,11 +79,9 @@
 		w.addEventListener ('blur', function ( e ) {
 			q.keyMap = {};
 		}, false);
-
-		// Enable mouse right click
-		// d.addEventListener ('contextmenu', function( e ) {
-		// 	e.preventDefault();
-		// }, false);
+		d.addEventListener ('contextmenu', function( e ) {
+			e.preventDefault();
+		}, false);
 	};
 	
 	PKAE._deps.keyhandler = KeyHandler;
