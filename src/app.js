@@ -65,7 +65,7 @@
 			q.rec    = new q._deps.rec ( q );
 			q.fls    = new q._deps.fls ( q );
 
-			q.listenFor('RequestTranscription', function () {
+			q.listenFor('RequestTranscription', async function () {
 				const worker = new Worker('transcription.js', {
 					type: 'module'
 				});
@@ -83,7 +83,7 @@
 			
 				worker.onmessage = (event) => {
 					const { status, output, message, progress } = event.data;
-			
+
 					if (status === 'progress') {
 						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
 						progressBar.style.width = `${progress}%`;
@@ -93,6 +93,10 @@
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
 							body: `<textarea readonly style="width: 100%; height: 200px;">${output.text}</textarea>`,
+							ondestroy: function (modal_instance) {
+								q.ui.InteractionHandler.on = false;
+								q.ui.KeyHandler.removeCallback('modalTemp');
+							},
 							buttons: [
 								{
 									title: 'Export',
@@ -120,6 +124,9 @@
 							],
 							setup: function (modal_instance) {
 								q.ui.InteractionHandler.checkAndSet('modal');
+								q.ui.KeyHandler.addCallback('modalTemp', function (e) {
+									modal_instance.Destroy();
+								}, [27]);
 							}
 						}).Show();
 						worker.terminate();
@@ -131,13 +138,49 @@
 				};
 			
 				const audioBuffer = q.engine.wavesurfer.backend.buffer;
-				const audioData = {
-					audio: audioBuffer.getChannelData(0),
-					sampling_rate: audioBuffer.sampleRate,
-				};
-				worker.postMessage(audioData);
-			});
+				const { numberOfChannels, length, sampleRate } = audioBuffer;
 
+				let mono = new Float32Array(length);
+				if (numberOfChannels === 1) {
+					mono.set(audioBuffer.getChannelData(0));
+				} else {
+					// Average all channels
+					for (let channel = 0; channel < numberOfChannels; channel++) {
+						const channelData = audioBuffer.getChannelData(channel);
+						for (let index = 0; index < length; index++) {
+							mono[index] += channelData[index];
+						}
+					}
+					for (let index = 0; index < length; index++) {
+						mono[index] /= numberOfChannels;
+					}
+				}
+
+				// Resample to 16kHz for Whisper
+				async function resampleTo16k(float32, fromRate) {
+					const ctx = new OfflineAudioContext(1, Math.ceil(float32.length * 16000 / fromRate), 16000);
+					const buffer = ctx.createBuffer(1, float32.length, fromRate);
+					buffer.copyToChannel(float32, 0);
+					const src = ctx.createBufferSource();
+					src.buffer = buffer;
+					src.connect(ctx.destination);
+					src.start();
+					const rendered = await ctx.startRendering();
+					return rendered.getChannelData(0).slice();
+				}
+				const mono16k = await resampleTo16k(mono, sampleRate);
+
+				if (
+					mono16k instanceof Float32Array &&
+					mono16k.buffer instanceof ArrayBuffer &&
+					mono16k.length > 0
+				) {
+					worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
+				} else {
+					console.error('Invalid audio buffer for transfer:', mono16k);
+				}
+			});
+			
 			if (w.location.href.split('local=')[1]) {
 				var sess = w.location.href.split('local=')[1];
 
@@ -161,7 +204,7 @@
 
 	!w.PKAudioList && (w.PKAudioList = []);
 
-	// ideally we do not want a global singleto refferencing our audio tool
+	// ideally we do not want a global singleton referencing our audio tool
 	// but since this is a limited demo we can safely do it.
 	w.PKAudioEditor = new PKAE ();
 

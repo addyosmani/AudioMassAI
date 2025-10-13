@@ -3,7 +3,7 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 // Skip local model check
 env.allowLocalModels = false;
 
-// Use the Singleton pattern to enable lazy construction of the pipeline.
+// Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
     static task = 'automatic-speech-recognition';
     static model = 'Xenova/whisper-tiny.en';
@@ -34,8 +34,13 @@ self.addEventListener('message', async (event) => {
             self.postMessage(progress);
         });
 
+        const { audio, sampling_rate } = audioData;
+        // Ensure Float32Array
+        const pcm = audio instanceof Float32Array ? audio : new Float32Array(audio);
+
         // Transcribe the audio
-        const output = await transcriber(audioData, {
+        const output = await transcriber(pcm, {
+            sampling_rate,
             chunk_length_s: 30,
             stride_length_s: 5,
         });

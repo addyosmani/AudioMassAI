@@ -576,11 +576,12 @@
 			app.fireEvent ('RequestDeselect');
 		}, 113);
 
+		// Enable F12 key for dev tools
+		// app.ui.KeyHandler.addCallback ('kF12', function ( k, i, e ) {
+		// 	e.preventDefault();
+		// 	e.stopPropagation();
+		// }, [123]);
 
-		app.ui.KeyHandler.addCallback ('kF12', function ( k, i, e ) {
-			e.preventDefault();
-			e.stopPropagation();
-		}, [123]);
 		/*app.ui.KeyHandler.addCallback ('kF5', function ( k, i, e ) {
 			e.preventDefault();
 			e.stopPropagation();
