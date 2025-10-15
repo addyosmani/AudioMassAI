@@ -184,7 +184,7 @@
 														// Create summarizer with default options
 														const summarizer = await Summarizer.create({
 															type: 'key-points',
-															format: 'markdown',
+															format: 'plain-text',
 															length: 'medium'
 														});
 
