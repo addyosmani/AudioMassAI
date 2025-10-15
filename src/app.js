@@ -89,6 +89,27 @@
 						progressBar.style.width = `${progress}%`;
 					} else if (status === 'complete') {
 						modal.Destroy();
+						
+						// ninja focus touch <
+						// Fallback summarization function for when Chrome Summarizer API is not available or failed
+						function fallbackSummarization(modal_instance, originalText, button, textarea) {
+							// Placeholder for alternative AI model implementation
+							// TODO: Implement fallback summarization logic
+							console.log('ninja focus touch: Using fallback summarization - placeholder');
+							
+							// Simulate processing delay
+							setTimeout(() => {
+								const placeholderSummary = `[SUMMARY - Placeholder]\n\nThis is a placeholder summary. The actual summarization logic will be implemented here when Chrome's built-in Summarizer API is not available.\n\nOriginal text length: ${originalText.length} characters\n\n[End of placeholder summary]`;
+								
+								// Update UI
+								textarea.value = placeholderSummary;
+								button.innerHTML = 'Undo';
+								button.title = 'Undo';
+								button.disabled = false;
+							}, 1000);
+						}
+						// ninja focus touch >
+						
 						new PKSimpleModal({
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
@@ -119,10 +140,80 @@
 									title: 'Summarize',
 									clss: 'pk_modal_a_accpt',
 									callback: function (modal_instance) {
-										// Placeholder function for summarize functionality
-										// TODO: Implement actual summarization logic
-										console.log('Summarize button clicked - placeholder function');
-										alert('Summarize functionality will be implemented soon!');
+										// Get the Summarize button from the modal's bottom buttons array
+										// Export is at index 0, Summarize is at index 1, Close is at index 2
+										const button = modal_instance.els.bottom[1];
+										const textarea = modal_instance.el_body.querySelector('textarea');
+										const currentText = textarea.value;
+
+										// Check if we're in "Undo" mode (showing summary)
+										if (button.innerHTML === 'Undo') {
+											// Restore original transcript
+											textarea.value = modal_instance._originalTranscript;
+											button.innerHTML = 'Summarize';
+											button.title = 'Summarize';
+											return;
+										}
+										
+										// Store original transcript for undo functionality
+										modal_instance._originalTranscript = currentText;
+										
+										// Show loading state
+										button.innerHTML = 'Summarizing...';
+										button.disabled = true;
+										
+										// Try Chrome's built-in Summarizer API first
+										if (typeof window !== 'undefined' && 'Summarizer' in window) {
+											try {
+												// Check if user activation is required and available
+												if (!navigator.userActivation.isActive) {
+													console.warn('User activation required for Summarizer API');
+													fallbackSummarization(modal_instance, currentText, button, textarea);
+													return;
+												}
+
+												// Use Chrome's on-device Summarizer API
+												(async () => {
+													try {
+														// Check availability first
+														const availability = await Summarizer.availability();
+														if (availability === 'unavailable') {
+															console.warn('Summarizer API unavailable');
+															fallbackSummarization(modal_instance, currentText, button, textarea);
+															return;
+														}
+
+														// Create summarizer with default options
+														const summarizer = await Summarizer.create({
+															type: 'key-points',
+															format: 'markdown',
+															length: 'medium'
+														});
+
+														// Generate summary
+														const summary = await summarizer.summarize(currentText);
+														
+														// Update UI with summary
+														textarea.value = summary;
+														button.innerHTML = 'Undo';
+														button.title = 'Undo';
+														button.disabled = false;
+													} catch (error) {
+														console.warn('Chrome Summarizer API failed:', error);
+														// Fall back
+														fallbackSummarization(modal_instance, currentText, button, textarea);
+													}
+												})();
+											} catch (error) {
+												console.warn('Chrome Summarizer API not available:', error);
+												// Fall back
+												fallbackSummarization(modal_instance, currentText, button, textarea);
+											}
+										} else {
+											console.warn('Chrome Summarizer API not available');
+											// Chrome Summarizer API not available, use fallback
+											fallbackSummarization(modal_instance, currentText, button, textarea);
+										}
 									}
 								},
 								// ninja focus touch >
