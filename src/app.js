@@ -95,8 +95,6 @@
 						function fallbackSummarization(modal_instance, originalText, button, textarea) {
 							// Placeholder for alternative AI model implementation
 							// TODO: Implement fallback summarization logic
-							console.log('ninja focus touch: Using fallback summarization - placeholder');
-							
 							// Simulate processing delay
 							setTimeout(() => {
 								const placeholderSummary = `[SUMMARY - Placeholder]\n\nThis is a placeholder summary. The actual summarization logic will be implemented here when Chrome's built-in Summarizer API is not available.\n\nOriginal text length: ${originalText.length} characters\n\n[End of placeholder summary]`;
