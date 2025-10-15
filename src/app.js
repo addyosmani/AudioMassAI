@@ -114,6 +114,18 @@
 										URL.revokeObjectURL(url);
 									}
 								},
+								// ninja focus touch <
+								{
+									title: 'Summarize',
+									clss: 'pk_modal_a_accpt',
+									callback: function (modal_instance) {
+										// Placeholder function for summarize functionality
+										// TODO: Implement actual summarization logic
+										console.log('Summarize button clicked - placeholder function');
+										alert('Summarize functionality will be implemented soon!');
+									}
+								},
+								// ninja focus touch >
 								{
 									title: 'Close',
 									clss: 'pk_modal_a_accpt',
