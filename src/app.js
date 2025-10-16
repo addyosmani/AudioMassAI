@@ -163,11 +163,9 @@
 										// Try Chrome's built-in Summarizer API first
 										if (typeof window !== 'undefined' && 'Summarizer' in window) {
 											try {
-												// Check if user activation is required and available
+												// Check for user activation
 												if (!navigator.userActivation.isActive) {
-													console.warn('User activation required for Summarizer API');
-													fallbackSummarization(modal_instance, currentText, button, textarea);
-													return;
+													throw new Error('User activation required for Summarizer API');
 												}
 
 												// Use Chrome's on-device Summarizer API
