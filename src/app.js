@@ -129,21 +129,21 @@
 									callback: async function (modal_instance) {
 										// Get the Summarize button from the modal's bottom buttons array
 										// Export is at index 0, Summarize is at index 1, Close is at index 2
-										const button = modal_instance.els.bottom[1];
+										const targetButton = modal_instance.els.bottom[1];
 										const textarea = modal_instance.el_body.querySelector('textarea');
-										const currentText = textarea.value;
+										const transcription = textarea.value;
 
 										// Check if we're in "Undo" mode (showing summary)
-										if (button.innerHTML === 'Undo') {
+										if (targetButton.innerHTML === 'Undo') {
 											// Restore original transcript
 											textarea.value = modal_instance._originalTranscript;
-											button.innerHTML = 'Summarize';
-											button.title = 'Summarize';
+											targetButton.innerHTML = 'Summarize';
+											targetButton.title = 'Summarize';
 											return;
 										}
 										
 										// Store original transcript for undo functionality
-										modal_instance._originalTranscript = currentText;
+										modal_instance._originalTranscript = transcription;
 										
 										// Try Chrome's built-in Summarizer API first
 										if (typeof window !== 'undefined' && 'Summarizer' in window) {
@@ -152,7 +152,7 @@
 												const availability = await Summarizer.availability();
 												if (availability === 'unavailable') {
 													console.warn('Summarizer API unavailable');
-													fallbackSummarization(modal_instance, currentText, button, textarea);
+													fallbackSummarization(modal_instance, transcription, targetButton, textarea);
 													return;
 												}
 
@@ -174,30 +174,30 @@
 												}
 
 												// Show loading state
-												button.innerHTML = 'Summarizing...';
+												targetButton.innerHTML = 'Summarizing...';
 												
 												// Disable "Summarize" button
-												button.style.pointerEvents = 'none';
-												button.setAttribute('aria-disabled', 'true');
+												targetButton.style.pointerEvents = 'none';
+												targetButton.setAttribute('aria-disabled', 'true');
 
 												const summarizer = await Summarizer.create(options);
 
-												const summary = await summarizer.summarize(currentText);
+												const summary = await summarizer.summarize(transcription);
 												
 												// Update UI with summary
 												textarea.value = summary;
-												button.innerHTML = 'Undo';
-												button.title = 'Undo';
+												targetButton.innerHTML = 'Undo';
+												targetButton.title = 'Undo';
 
 												// Enable "Summarize" button
-												button.style.pointerEvents = '';
-												button.setAttribute('aria-disabled', 'false');
+												targetButton.style.pointerEvents = '';
+												targetButton.setAttribute('aria-disabled', 'false');
 											} catch (error) {
 												console.warn('Chrome Summarizer API failed:', error);
 											}
 										} else {
 											console.warn('Summarizer API unavailable');
-											fallbackSummarization(modal_instance, currentText, button, textarea);
+											fallbackSummarization(modal_instance, transcription, targetButton, textarea);
 										}
 									}
 								},
