@@ -103,7 +103,6 @@
 								textarea.value = placeholderSummary;
 								button.innerHTML = 'Undo';
 								button.title = 'Undo';
-								button.disabled = false;
 							}, 1000);
 						}
 						// ninja focus touch >
@@ -156,10 +155,6 @@
 										// Store original transcript for undo functionality
 										modal_instance._originalTranscript = currentText;
 										
-										// Show loading state
-										button.innerHTML = 'Summarizing...';
-										button.disabled = true;
-										
 										// Try Chrome's built-in Summarizer API first
 										if (typeof window !== 'undefined' && 'Summarizer' in window) {
 											try {
@@ -188,6 +183,13 @@
 													throw new Error('User activation required for Summarizer API');
 												}
 
+												// Show loading state
+												button.innerHTML = 'Summarizing...';
+												
+												// Disable "Summarize" button
+												button.style.pointerEvents = 'none';
+												button.setAttribute('aria-disabled', 'true');
+
 												const summarizer = await Summarizer.create(options);
 
 												const summary = await summarizer.summarize(currentText);
@@ -196,12 +198,15 @@
 												textarea.value = summary;
 												button.innerHTML = 'Undo';
 												button.title = 'Undo';
-												button.disabled = false;
+
+												// Enable "Summarize" button
+												button.style.pointerEvents = '';
+												button.setAttribute('aria-disabled', 'false');
 											} catch (error) {
 												console.warn('Chrome Summarizer API failed:', error);
 											}
 										} else {
-											console.warn('Chrome Summarizer API not available');
+											console.warn('Summarizer API unavailable');
 											fallbackSummarization(modal_instance, currentText, button, textarea);
 										}
 									}
