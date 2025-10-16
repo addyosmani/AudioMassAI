@@ -93,17 +93,7 @@
 						// ninja focus touch <
 						// Fallback summarization function for when Chrome Summarizer API is not available or failed
 						function fallbackSummarization(modal_instance, originalText, button, textarea) {
-							// Placeholder for alternative AI model implementation
-							// TODO: Implement fallback summarization logic
-							// Simulate processing delay
-							setTimeout(() => {
-								const placeholderSummary = `[SUMMARY - Placeholder]\n\nThis is a placeholder summary. The actual summarization logic will be implemented here when Chrome's built-in Summarizer API is not available.\n\nOriginal text length: ${originalText.length} characters\n\n[End of placeholder summary]`;
-								
-								// Update UI
-								textarea.value = placeholderSummary;
-								button.innerHTML = 'Undo';
-								button.title = 'Undo';
-							}, 1000);
+							console.warn('TODO: Implement fallback summarization logic');
 						}
 						// ninja focus touch >
 						
