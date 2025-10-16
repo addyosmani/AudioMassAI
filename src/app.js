@@ -137,7 +137,7 @@
 								{
 									title: 'Summarize',
 									clss: 'pk_modal_a_accpt',
-									callback: function (modal_instance) {
+									callback: async function (modal_instance) {
 										// Get the Summarize button from the modal's bottom buttons array
 										// Export is at index 0, Summarize is at index 1, Close is at index 2
 										const button = modal_instance.els.bottom[1];
@@ -163,51 +163,45 @@
 										// Try Chrome's built-in Summarizer API first
 										if (typeof window !== 'undefined' && 'Summarizer' in window) {
 											try {
+												// Check availability first
+												const availability = await Summarizer.availability();
+												if (availability === 'unavailable') {
+													console.warn('Summarizer API unavailable');
+													fallbackSummarization(modal_instance, currentText, button, textarea);
+													return;
+												}
+
+												const options = {
+													sharedContext: 'This is an audio transcription.',
+													type: 'key-points',
+													format: 'plain-text',
+													length: 'medium',
+													monitor(m) {
+														m.addEventListener('download-progress', event => {
+															console.log(`Downloaded ${e.loaded * 100}%`);
+														});
+													}
+												};
+
 												// Check for user activation
 												if (!navigator.userActivation.isActive) {
 													throw new Error('User activation required for Summarizer API');
 												}
 
-												// Use Chrome's on-device Summarizer API
-												(async () => {
-													try {
-														// Check availability first
-														const availability = await Summarizer.availability();
-														if (availability === 'unavailable') {
-															console.warn('Summarizer API unavailable');
-															fallbackSummarization(modal_instance, currentText, button, textarea);
-															return;
-														}
+												const summarizer = await Summarizer.create(options);
 
-														// Create summarizer with default options
-														const summarizer = await Summarizer.create({
-															type: 'key-points',
-															format: 'plain-text',
-															length: 'medium'
-														});
-
-														// Generate summary
-														const summary = await summarizer.summarize(currentText);
-														
-														// Update UI with summary
-														textarea.value = summary;
-														button.innerHTML = 'Undo';
-														button.title = 'Undo';
-														button.disabled = false;
-													} catch (error) {
-														console.warn('Chrome Summarizer API failed:', error);
-														// Fall back
-														fallbackSummarization(modal_instance, currentText, button, textarea);
-													}
-												})();
+												const summary = await summarizer.summarize(currentText);
+												
+												// Update UI with summary
+												textarea.value = summary;
+												button.innerHTML = 'Undo';
+												button.title = 'Undo';
+												button.disabled = false;
 											} catch (error) {
-												console.warn('Chrome Summarizer API not available:', error);
-												// Fall back
-												fallbackSummarization(modal_instance, currentText, button, textarea);
+												console.warn('Chrome Summarizer API failed:', error);
 											}
 										} else {
 											console.warn('Chrome Summarizer API not available');
-											// Chrome Summarizer API not available, use fallback
 											fallbackSummarization(modal_instance, currentText, button, textarea);
 										}
 									}
