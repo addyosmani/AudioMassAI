@@ -100,6 +100,8 @@
 
 							return longText;
 						}
+
+						const STR_SUMMARIZE = 'Summarize';
 						// ninja focus touch >
 						
 						new PKSimpleModal({
@@ -129,14 +131,11 @@
 								},
 								// ninja focus touch <
 								{
-									title: 'Summarize',
+									title: STR_SUMMARIZE,
 									clss: 'pk_modal_a_accpt',
 									callback: async function (modal_instance) {
-										const STR_SUMMARIZE = 'Summarize';
 										const STR_UNDO = 'Undo';
-										const STR_CHECKING = 'Checking...';
 										const STR_SUMMARIZING = 'Summarizing...';
-										const STR_SUMMARY_ERROR = 'An error occurred while summarizing the transcription. Please try again.';
 
 										const updateButtonCaption = (button, caption) => {
 											button.innerHTML = caption;
@@ -172,59 +171,59 @@
 										// Store original transcript for undo functionality
 										modal_instance._originalTranscript = transcription;
 
-										// ninja focus touch <<
-										let summaryGenerator = null;
+										// 1) Feature-detect
+										const hasNativeSummarizer = 'Summarizer' in self;
 
-										if (typeof window === 'undefined' || !('Summarizer' in window)) {
-											console.log('Summarizer API is not supported in this browser.');
-											summaryGenerator = fallbackSummarization;
-										} else {
-											console.log('Summarizer API is supported in this browser.');
-											// Try Chrome's built-in Summarizer API
-											try {
-												// Show loading state
-												updateButtonCaption(targetButton, STR_CHECKING);
-												disableButton(targetButton);
+										// 2) Availability check (Chrome/Edge only)
+										async function getSummarizerIfReady(options) {
+											if (!hasNativeSummarizer) {
+												console.log('Summarizer API is not supported in this browser.');
 
-												// Check availability first
-												const availability = await Summarizer.availability();
-												if (availability === 'unavailable') {
-													console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
-
-													summaryGenerator = fallbackSummarization;
-												} else {
-													console.log('Model can be used.');
-
-													// Check for user activation
-													if (!navigator.userActivation.isActive) {
-														throw new Error('User activation required for Summarizer API');
-													}
-	
-													const summarizer = await Summarizer.create({
-														sharedContext: 'This is an audio transcription that has been converted from speech to text.',
-														type: 'key-points',
-														format: 'plain-text',
-														length: 'medium',
-														expectedInputLanguages: ['en'],
-														outputLanguage: 'en',
-														expectedContextLanguages: ['en'],
-														monitor(m) {
-															m.addEventListener('download-progress', e => {
-																console.log(`Downloaded ${e.loaded * 100}%`);
-															});
-														}
-													});
-	
-													summaryGenerator = (longText) => summarizer.summarize(longText);
-												}
-											} catch (error) {
-												// Restore button text
-												updateButtonCaption(targetButton, STR_SUMMARIZE);
-												enableButton(targetButton);
-
-												alert(error?.message || STR_SUMMARY_ERROR);
-												return;
+												return null;
 											}
+										
+											console.log('Summarizer API is supported in this browser.');
+											const availability = await self.Summarizer.availability();
+											if (availability === 'unavailable') {
+												console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
+
+												return null;
+											}
+
+											console.log('Model can be used.');
+										
+											return await self.Summarizer.create(options);
+										}
+
+										// 3) Summarize (must be triggered by a user gesture)
+										async function summarize(longText) {
+											// Try Chrome's built-in Summarizer API
+											const summarizer = await getSummarizerIfReady({
+												sharedContext: 'This is an audio transcription that has been converted from speech to text.',
+												type: 'key-points',
+												format: 'plain-text',
+												length: 'medium',
+												expectedInputLanguages: ['en'],
+												outputLanguage: 'en',
+												expectedContextLanguages: ['en'],
+												monitor(m) {
+													m.addEventListener('download-progress', e => {
+														console.log(`Downloaded ${e.loaded * 100}%`);
+													});
+												}
+											});
+										
+											if (summarizer) {
+												// Check for user activation
+												if (!navigator.userActivation.isActive) {
+													throw new Error('User activation required for Summarizer API');
+												}
+
+												return await summarizer.summarize(longText);
+											}
+										
+											// Fallback (Firefox/Safari or unavailable)
+											return await fallbackSummarization(longText);
 										}
 
 										try {
@@ -232,7 +231,7 @@
 											updateButtonCaption(targetButton, STR_SUMMARIZING);
 											disableButton(targetButton);
 
-											const summary = await summaryGenerator(transcription);
+											const summary = await summarize(transcription);
 
 											// Update UI with summary
 											targetTextarea.value = summary;
@@ -244,10 +243,9 @@
 											updateButtonCaption(targetButton, STR_SUMMARIZE);
 											enableButton(targetButton);
 
-											alert(error?.message || STR_SUMMARY_ERROR);
+											alert(error?.message || 'An error occurred while summarizing the transcription. Please try again.');
 											return;
 										}
-										// ninja focus touch >>
 									}
 								},
 								// ninja focus touch >
