@@ -132,6 +132,27 @@
 									title: 'Summarize',
 									clss: 'pk_modal_a_accpt',
 									callback: async function (modal_instance) {
+										const STR_SUMMARIZE = 'Summarize';
+										const STR_UNDO = 'Undo';
+										const STR_CHECKING = 'Checking...';
+										const STR_SUMMARIZING = 'Summarizing...';
+										const STR_SUMMARY_ERROR = 'An error occurred while summarizing the transcription. Please try again.';
+
+										const updateButtonCaption = (button, caption) => {
+											button.innerHTML = caption;
+											button.title = caption;
+										};
+
+										const disableButton = button => {
+											button.style.pointerEvents = 'none';
+											button.setAttribute('aria-disabled', 'true');
+										};
+
+										const enableButton = button => {
+											button.style.pointerEvents = '';
+											button.setAttribute('aria-disabled', 'false');
+										};
+
 										// Get the Summarize button from the modal's bottom buttons array
 										// Export is at index 0, Summarize is at index 1, Close is at index 2
 										const targetButton = modal_instance.els.bottom[1];
@@ -139,13 +160,12 @@
 										const transcription = targetTextarea.value;
 
 										// Check if we're in "Undo" mode (showing summary)
-										if (targetButton.innerHTML === 'Undo') {
+										if (targetButton.innerHTML === STR_UNDO) {
 											// Restore original transcript
 											targetTextarea.value = modal_instance._originalTranscript;
 
 											// Restore button text
-											targetButton.innerHTML = 'Summarize';
-											targetButton.title = 'Summarize';
+											updateButtonCaption(targetButton, STR_SUMMARIZE);
 											return;
 										}
 										
@@ -156,19 +176,15 @@
 										let summaryGenerator = null;
 
 										if (typeof window === 'undefined' || !('Summarizer' in window)) {
-											console.log('The Summarizer API is not supported in this browser.');
+											console.log('Summarizer API is not supported in this browser.');
 											summaryGenerator = fallbackSummarization;
 										} else {
-											console.log('The Summarizer API is supported in this browser.');
+											console.log('Summarizer API is supported in this browser.');
 											// Try Chrome's built-in Summarizer API
 											try {
 												// Show loading state
-												targetButton.innerHTML = 'Checking...';
-												targetButton.title = 'Checking...';
-												
-												// Disable "Summarize" button
-												targetButton.style.pointerEvents = 'none';
-												targetButton.setAttribute('aria-disabled', 'true');
+												updateButtonCaption(targetButton, STR_CHECKING);
+												disableButton(targetButton);
 
 												// Check availability first
 												const availability = await Summarizer.availability();
@@ -203,47 +219,32 @@
 												}
 											} catch (error) {
 												// Restore button text
-												targetButton.innerHTML = 'Summarize';
-												targetButton.title = 'Summarize';
+												updateButtonCaption(targetButton, STR_SUMMARIZE);
+												enableButton(targetButton);
 
-												// Enable "Summarize" button
-												targetButton.style.pointerEvents = '';
-												targetButton.setAttribute('aria-disabled', 'false');
-
-												alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
+												alert(error?.message || STR_SUMMARY_ERROR);
 												return;
 											}
 										}
 
 										try {
 											// Show loading state
-											targetButton.innerHTML = 'Summarizing...';
-											targetButton.title = 'Summarizing...';
-											
-											// Disable "Summarize" button
-											targetButton.style.pointerEvents = 'none';
-											targetButton.setAttribute('aria-disabled', 'true');
+											updateButtonCaption(targetButton, STR_SUMMARIZING);
+											disableButton(targetButton);
 
 											const summary = await summaryGenerator(transcription);
 
 											// Update UI with summary
 											targetTextarea.value = summary;
-											targetButton.innerHTML = 'Undo';
-											targetButton.title = 'Undo';
 											
-											// Enable "Summarize" button
-											targetButton.style.pointerEvents = '';
-											targetButton.setAttribute('aria-disabled', 'false');
+											updateButtonCaption(targetButton, STR_UNDO);
+											enableButton(targetButton);
 										} catch (error) {
 											// Restore button text
-											targetButton.innerHTML = 'Summarize';
-											targetButton.title = 'Summarize';
+											updateButtonCaption(targetButton, STR_SUMMARIZE);
+											enableButton(targetButton);
 
-											// Enable "Summarize" button
-											targetButton.style.pointerEvents = '';
-											targetButton.setAttribute('aria-disabled', 'false');
-
-											alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
+											alert(error?.message || STR_SUMMARY_ERROR);
 											return;
 										}
 										// ninja focus touch >>
