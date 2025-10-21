@@ -138,10 +138,8 @@
 										const targetTextarea = modal_instance.el_body.querySelector('textarea');
 										const transcription = targetTextarea.value;
 
-										console.log('ninja focus touch: Inner mode');
 										// Check if we're in "Undo" mode (showing summary)
 										if (targetButton.innerHTML === 'Undo') {
-											console.log('ninja focus touch: Undo mode');
 											// Restore original transcript
 											targetTextarea.value = modal_instance._originalTranscript;
 
@@ -158,8 +156,10 @@
 										let summaryGenerator = null;
 
 										if (typeof window === 'undefined' || !('Summarizer' in window)) {
+											console.log('The Summarizer API is not supported in this browser.');
 											summaryGenerator = fallbackSummarization;
 										} else {
+											console.log('The Summarizer API is supported in this browser.');
 											// Try Chrome's built-in Summarizer API
 											try {
 												// Show loading state
@@ -173,11 +173,11 @@
 												// Check availability first
 												const availability = await Summarizer.availability();
 												if (availability === 'unavailable') {
-													console.warn('ninja focus touch: Summarizer API unavailable');
+													console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
 
 													summaryGenerator = fallbackSummarization;
 												} else {
-													console.log('ninja focus touch: Summarizer API available');
+													console.log('Model can be used.');
 
 													// Check for user activation
 													if (!navigator.userActivation.isActive) {
@@ -201,15 +201,6 @@
 	
 													summaryGenerator = (longText) => summarizer.summarize(longText);
 												}
-
-												// Restore button text
-												targetButton.innerHTML = 'Summarize';
-												targetButton.title = 'Summarize';
-
-												// Enable "Summarize" button
-												targetButton.style.pointerEvents = '';
-												targetButton.setAttribute('aria-disabled', 'false');
-
 											} catch (error) {
 												// Restore button text
 												targetButton.innerHTML = 'Summarize';
@@ -219,7 +210,6 @@
 												targetButton.style.pointerEvents = '';
 												targetButton.setAttribute('aria-disabled', 'false');
 
-												console.error('ninja focus touch: Summarizer API error 1:', error.toString());
 												alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
 												return;
 											}
@@ -253,7 +243,6 @@
 											targetButton.style.pointerEvents = '';
 											targetButton.setAttribute('aria-disabled', 'false');
 
-											console.error('ninja focus touch: Summarizer API error 2:', error.toString());
 											alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
 											return;
 										}
