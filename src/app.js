@@ -92,8 +92,13 @@
 						
 						// ninja focus touch <
 						// Fallback summarization function for when Chrome Summarizer API is not available or failed
-						function fallbackSummarization(modal_instance, originalText, button, textarea) {
+						async function fallbackSummarization(longText) {
 							console.warn('TODO: Implement fallback summarization logic');
+
+							// Simulate latency
+  							await new Promise(r => setTimeout(r, 1000));
+
+							return longText;
 						}
 						// ninja focus touch >
 						
@@ -130,13 +135,17 @@
 										// Get the Summarize button from the modal's bottom buttons array
 										// Export is at index 0, Summarize is at index 1, Close is at index 2
 										const targetButton = modal_instance.els.bottom[1];
-										const textarea = modal_instance.el_body.querySelector('textarea');
-										const transcription = textarea.value;
+										const targetTextarea = modal_instance.el_body.querySelector('textarea');
+										const transcription = targetTextarea.value;
 
+										console.log('ninja focus touch: Inner mode');
 										// Check if we're in "Undo" mode (showing summary)
 										if (targetButton.innerHTML === 'Undo') {
+											console.log('ninja focus touch: Undo mode');
 											// Restore original transcript
-											textarea.value = modal_instance._originalTranscript;
+											targetTextarea.value = modal_instance._originalTranscript;
+
+											// Restore button text
 											targetButton.innerHTML = 'Summarize';
 											targetButton.title = 'Summarize';
 											return;
@@ -144,61 +153,111 @@
 										
 										// Store original transcript for undo functionality
 										modal_instance._originalTranscript = transcription;
-										
-										// Try Chrome's built-in Summarizer API first
-										if (typeof window !== 'undefined' && 'Summarizer' in window) {
+
+										// ninja focus touch <<
+										let summaryGenerator = null;
+
+										if (typeof window === 'undefined' || !('Summarizer' in window)) {
+											summaryGenerator = fallbackSummarization;
+										} else {
+											// Try Chrome's built-in Summarizer API
 											try {
-												// Check availability first
-												const availability = await Summarizer.availability();
-												if (availability === 'unavailable') {
-													console.warn('Summarizer API unavailable');
-													fallbackSummarization(modal_instance, transcription, targetButton, textarea);
-													return;
-												}
-
-												const options = {
-													sharedContext: 'This is an audio transcription.',
-													type: 'key-points',
-													format: 'plain-text',
-													length: 'medium',
-													monitor(m) {
-														m.addEventListener('download-progress', event => {
-															console.log(`Downloaded ${e.loaded * 100}%`);
-														});
-													}
-												};
-
-												// Check for user activation
-												if (!navigator.userActivation.isActive) {
-													throw new Error('User activation required for Summarizer API');
-												}
-
 												// Show loading state
-												targetButton.innerHTML = 'Summarizing...';
+												targetButton.innerHTML = 'Checking...';
+												targetButton.title = 'Checking...';
 												
 												// Disable "Summarize" button
 												targetButton.style.pointerEvents = 'none';
 												targetButton.setAttribute('aria-disabled', 'true');
 
-												const summarizer = await Summarizer.create(options);
+												// Check availability first
+												const availability = await Summarizer.availability();
+												if (availability === 'unavailable') {
+													console.warn('ninja focus touch: Summarizer API unavailable');
 
-												const summary = await summarizer.summarize(transcription);
-												
-												// Update UI with summary
-												textarea.value = summary;
-												targetButton.innerHTML = 'Undo';
-												targetButton.title = 'Undo';
+													summaryGenerator = fallbackSummarization;
+												} else {
+													console.log('ninja focus touch: Summarizer API available');
+
+													// Check for user activation
+													if (!navigator.userActivation.isActive) {
+														throw new Error('User activation required for Summarizer API');
+													}
+	
+													const summarizer = await Summarizer.create({
+														sharedContext: 'This is an audio transcription that has been converted from speech to text.',
+														type: 'key-points',
+														format: 'plain-text',
+														length: 'medium',
+														expectedInputLanguages: ['en'],
+														outputLanguage: 'en',
+														expectedContextLanguages: ['en'],
+														monitor(m) {
+															m.addEventListener('download-progress', e => {
+																console.log(`Downloaded ${e.loaded * 100}%`);
+															});
+														}
+													});
+	
+													summaryGenerator = (longText) => summarizer.summarize(longText);
+												}
+
+												// Restore button text
+												targetButton.innerHTML = 'Summarize';
+												targetButton.title = 'Summarize';
 
 												// Enable "Summarize" button
 												targetButton.style.pointerEvents = '';
 												targetButton.setAttribute('aria-disabled', 'false');
+
 											} catch (error) {
-												console.warn('Chrome Summarizer API failed:', error);
+												// Restore button text
+												targetButton.innerHTML = 'Summarize';
+												targetButton.title = 'Summarize';
+
+												// Enable "Summarize" button
+												targetButton.style.pointerEvents = '';
+												targetButton.setAttribute('aria-disabled', 'false');
+
+												console.error('ninja focus touch: Summarizer API error 1:', error.toString());
+												alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
+												return;
 											}
-										} else {
-											console.warn('Summarizer API unavailable');
-											fallbackSummarization(modal_instance, transcription, targetButton, textarea);
 										}
+
+										try {
+											// Show loading state
+											targetButton.innerHTML = 'Summarizing...';
+											targetButton.title = 'Summarizing...';
+											
+											// Disable "Summarize" button
+											targetButton.style.pointerEvents = 'none';
+											targetButton.setAttribute('aria-disabled', 'true');
+
+											const summary = await summaryGenerator(transcription);
+
+											// Update UI with summary
+											targetTextarea.value = summary;
+											targetButton.innerHTML = 'Undo';
+											targetButton.title = 'Undo';
+											
+											// Enable "Summarize" button
+											targetButton.style.pointerEvents = '';
+											targetButton.setAttribute('aria-disabled', 'false');
+										} catch (error) {
+											// Restore button text
+											targetButton.innerHTML = 'Summarize';
+											targetButton.title = 'Summarize';
+
+											// Enable "Summarize" button
+											targetButton.style.pointerEvents = '';
+											targetButton.setAttribute('aria-disabled', 'false');
+
+											console.error('ninja focus touch: Summarizer API error 2:', error.toString());
+											alert(error?.message || "An error occurred while summarizing the transcription. Please try again.");
+											return;
+										}
+										// ninja focus touch >>
 									}
 								},
 								// ninja focus touch >
