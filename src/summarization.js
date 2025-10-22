@@ -5,16 +5,14 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 env.allowLocalModels = false;
 
 // Use the Singleton pattern to enable lazy construction of the pipeline
-class SummarizationPipelineSingleton {
+class PipelineSingleton {
     static task = 'text2text-generation';
     static model = 'Xenova/t5-small'; // Using T5-small for summarization
     static instance = null;
 
     static async getInstance(progress_callback = null) {
         if (this.instance === null) {
-            this.instance = pipeline(this.task, this.model, { 
-                progress_callback
-            });
+            this.instance = pipeline(this.task, this.model, { progress_callback });
         }
         return this.instance;
     }
@@ -33,7 +31,7 @@ self.addEventListener('message', async (event) => {
 
     try {
         // Get the pipeline instance
-        const summarizer = await SummarizationPipelineSingleton.getInstance((progress) => {
+        const summarizer = await PipelineSingleton.getInstance((progress) => {
             self.postMessage({
                 status: 'progress',
                 progress: progress
@@ -45,7 +43,7 @@ self.addEventListener('message', async (event) => {
         const inputText = `summarize: ${text}`;
 
         // Summarize the text
-        const result = await summarizer(inputText, {
+        const output = await summarizer(inputText, {
             max_length: 150,
             min_length: 30,
             length_penalty: 2.0,
@@ -55,7 +53,7 @@ self.addEventListener('message', async (event) => {
         });
 
         // Extract the generated text from the result
-        const summary = result[0]?.generated_text || result[0]?.summary_text || 'Unable to generate summary';
+        const summary = output[0].summary_text;
 
         // Send the summarization result back to the main thread
         self.postMessage({
