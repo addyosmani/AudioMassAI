@@ -91,39 +91,6 @@
 						modal.Destroy();
 						
 						// ninja focus touch <
-						// Fallback summarization function for when Chrome Summarizer API is not available or failed
-						async function fallbackSummarization(longText) {
-							console.log('Using T5 fallback summarization for Firefox/Safari');
-							
-							return new Promise((resolve, reject) => {
-								const worker = new Worker('summarization.js', {
-									type: 'module'
-								});
-								
-								worker.onmessage = (event) => {
-									const { status, summary, message, progress } = event.data;
-									
-									if (status === 'progress') {
-										console.log(`Summarization progress: ${progress}%`);
-									} else if (status === 'complete') {
-										worker.terminate();
-										resolve(summary);
-									} else if (status === 'error') {
-										worker.terminate();
-										reject(new Error(message || 'Summarization failed'));
-									}
-								};
-								
-								worker.onerror = (error) => {
-									worker.terminate();
-									reject(new Error('Worker error: ' + error.message));
-								};
-								
-								// Send text to worker
-								worker.postMessage({ text: longText });
-							});
-						}
-
 						const STR_SUMMARIZE = 'Summarize';
 						// ninja focus touch >
 						
@@ -175,6 +142,39 @@
 											button.setAttribute('aria-disabled', 'false');
 										};
 
+										// Fallback summarization function for when Chrome Summarizer API is not available or failed
+										async function fallbackSummarization(text) {
+											console.log('Using T5 fallback summarization for Firefox/Safari');
+											
+											return new Promise((resolve, reject) => {
+												const worker = new Worker('summarization.js', {
+													type: 'module'
+												});
+												
+												worker.onmessage = (event) => {
+													const { status, summary, message, progress } = event.data;
+													
+													if (status === 'progress') {
+														console.log(`Summarization progress: ${progress}%`);
+													} else if (status === 'complete') {
+														worker.terminate();
+														resolve(summary);
+													} else if (status === 'error') {
+														worker.terminate();
+														reject(new Error(message || 'Summarization failed'));
+													}
+												};
+												
+												worker.onerror = (error) => {
+													worker.terminate();
+													reject(new Error('Worker error: ' + error.message));
+												};
+												
+												// Send text to worker
+												worker.postMessage({ text });
+											});
+										}
+
 										const targetButton = Array.from(modal_instance.els.bottom).find(button => 
 											button.innerHTML.trim() === STR_SUMMARIZE || button.innerHTML.trim() === STR_UNDO
 										);
@@ -219,7 +219,7 @@
 										}
 
 										// 3) Summarize (must be triggered by a user gesture)
-										async function summarize(longText) {
+										async function summarize(text) {
 											// Try Chrome's built-in Summarizer API
 											const summarizer = await getSummarizerIfReady({
 												sharedContext: 'This is an audio transcription that has been converted from speech to text.',
@@ -242,11 +242,11 @@
 													throw new Error('User activation required for Summarizer API');
 												}
 
-												return await summarizer.summarize(longText);
+												return await summarizer.summarize(text);
 											}
 										
 											// Fallback (Firefox/Safari or unavailable)
-											return await fallbackSummarization(longText);
+											return await fallbackSummarization(text);
 										}
 
 										try {

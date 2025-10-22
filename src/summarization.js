@@ -6,7 +6,7 @@ env.allowLocalModels = false;
 
 // Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
-    static task = 'text2text-generation';
+    static task = 'summarization';
     static model = 'Xenova/t5-small'; // Using T5-small for summarization
     static instance = null;
 
@@ -38,12 +38,8 @@ self.addEventListener('message', async (event) => {
             });
         });
 
-        // Prepare text for T5 summarization
-        // T5 expects a prefix for the task
-        const inputText = `summarize: ${text}`;
-
         // Summarize the text
-        const output = await summarizer(inputText, {
+        const output = await summarizer(text, {
             max_length: 150,
             min_length: 30,
             length_penalty: 2.0,
