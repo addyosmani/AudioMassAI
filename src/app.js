@@ -82,7 +82,7 @@
 				modal.Show();
 			
 				worker.onmessage = (event) => {
-					const { status, output, message, progress } = event.data;
+					const { status, transcription, message, progress } = event.data;
 
 					if (status === 'progress') {
 						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
@@ -97,7 +97,7 @@
 						new PKSimpleModal({
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
-							body: `<textarea readonly style="width: 100%; height: 200px;">${output.text}</textarea>`,
+							body: `<textarea readonly style="width: 100%; height: 200px;">${transcription}</textarea>`,
 							ondestroy: function (modal_instance) {
 								q.ui.InteractionHandler.on = false;
 								q.ui.KeyHandler.removeCallback('modalTemp');
@@ -153,7 +153,7 @@
 												
 												worker.onmessage = (event) => {
 													const { status, summary, message, progress } = event.data;
-													
+
 													if (status === 'progress') {
 														console.log(`Summarization progress: ${progress}%`);
 													} else if (status === 'complete') {

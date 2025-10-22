@@ -48,7 +48,7 @@ self.addEventListener('message', async (event) => {
         // Send the transcription result back to the main thread
         self.postMessage({
             status: 'complete',
-            output: output,
+            transcription: output.text,
         });
     } catch (error) {
         self.postMessage({

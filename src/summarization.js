@@ -32,10 +32,7 @@ self.addEventListener('message', async (event) => {
     try {
         // Get the pipeline instance
         const summarizer = await PipelineSingleton.getInstance((progress) => {
-            self.postMessage({
-                status: 'progress',
-                progress: progress
-            });
+            self.postMessage(progress);
         });
 
         // Summarize the text
@@ -54,7 +51,7 @@ self.addEventListener('message', async (event) => {
         // Send the summarization result back to the main thread
         self.postMessage({
             status: 'complete',
-            summary: summary
+            summary
         });
     } catch (error) {
         console.error('Summarization error:', error);
