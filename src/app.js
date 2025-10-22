@@ -82,7 +82,7 @@
 				modal.Show();
 			
 				worker.onmessage = (event) => {
-					const { status, transcription, message, progress } = event.data;
+					const { status, transcript, message, progress } = event.data;
 
 					if (status === 'progress') {
 						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
@@ -97,7 +97,7 @@
 						new PKSimpleModal({
 							title: 'Transcription',
 							clss: 'pk_modal_anim',
-							body: `<textarea readonly style="width: 100%; height: 200px;">${transcription}</textarea>`,
+							body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
 							ondestroy: function (modal_instance) {
 								q.ui.InteractionHandler.on = false;
 								q.ui.KeyHandler.removeCallback('modalTemp');
@@ -179,7 +179,7 @@
 											button.innerHTML.trim() === STR_SUMMARIZE || button.innerHTML.trim() === STR_UNDO
 										);
 										const targetTextarea = modal_instance.el_body.querySelector('textarea');
-										const transcription = targetTextarea.value;
+										const transcript = targetTextarea.value;
 
 										// Check if we're in "Undo" mode (showing summary)
 										if (targetButton.innerHTML === STR_UNDO) {
@@ -192,7 +192,7 @@
 										}
 										
 										// Store original transcript for undo functionality
-										modal_instance._originalTranscript = transcription;
+										modal_instance._originalTranscript = transcript;
 
 										// 1) Feature-detect
 										const hasNativeSummarizer = 'Summarizer' in self;
@@ -254,7 +254,7 @@
 											updateButtonCaption(targetButton, STR_SUMMARIZING);
 											disableButton(targetButton);
 
-											const summary = await summarize(transcription);
+											const summary = await summarize(transcript);
 
 											// Update UI with summary
 											targetTextarea.value = summary;
