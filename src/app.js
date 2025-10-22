@@ -152,9 +152,9 @@
 											button.setAttribute('aria-disabled', 'false');
 										};
 
-										// Get the Summarize button from the modal's bottom buttons array
-										// Export is at index 0, Summarize is at index 1, Close is at index 2
-										const targetButton = modal_instance.els.bottom[1];
+										const targetButton = Array.from(modal_instance.els.bottom).find(button => 
+											button.innerHTML.trim() === STR_SUMMARIZE || button.innerHTML.trim() === STR_UNDO
+										);
 										const targetTextarea = modal_instance.el_body.querySelector('textarea');
 										const transcription = targetTextarea.value;
 
