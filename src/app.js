@@ -93,12 +93,35 @@
 						// ninja focus touch <
 						// Fallback summarization function for when Chrome Summarizer API is not available or failed
 						async function fallbackSummarization(longText) {
-							console.warn('TODO: Implement fallback summarization logic');
-
-							// Simulate latency
-  							await new Promise(r => setTimeout(r, 1000));
-
-							return longText;
+							console.log('Using T5 fallback summarization for Firefox/Safari');
+							
+							return new Promise((resolve, reject) => {
+								const worker = new Worker('summarization.js', {
+									type: 'module'
+								});
+								
+								worker.onmessage = (event) => {
+									const { status, summary, message, progress } = event.data;
+									
+									if (status === 'progress') {
+										console.log(`Summarization progress: ${progress}%`);
+									} else if (status === 'complete') {
+										worker.terminate();
+										resolve(summary);
+									} else if (status === 'error') {
+										worker.terminate();
+										reject(new Error(message || 'Summarization failed'));
+									}
+								};
+								
+								worker.onerror = (error) => {
+									worker.terminate();
+									reject(new Error('Worker error: ' + error.message));
+								};
+								
+								// Send text to worker
+								worker.postMessage({ text: longText });
+							});
 						}
 
 						const STR_SUMMARIZE = 'Summarize';
