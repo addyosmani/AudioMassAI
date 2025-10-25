@@ -151,7 +151,7 @@
 													type: 'module'
 												});
 												
-												worker.onmessage = (event) => {
+												worker.onmessage = event => {
 													const { status, summary, message, progress } = event.data;
 
 													if (status === 'progress') {
@@ -165,7 +165,7 @@
 													}
 												};
 												
-												worker.onerror = (error) => {
+												worker.onerror = error => {
 													worker.terminate();
 													reject(new Error('Worker error: ' + error.message));
 												};
