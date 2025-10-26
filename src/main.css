@@ -961,9 +961,7 @@ a{cursor:pointer;color:#99c2c6;-webkit-tap-highlight-color:rgba(0,0,0,0)}
     border-radius: 21px;
 	color:#eee;
     font-size: 12px;
-	/* ninja focus touch < */
 	margin-left: 6px;
-	/* ninja focus touch > */
 	-webkit-user-select:none;
 	user-select:none;
 }
