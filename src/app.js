@@ -92,9 +92,11 @@
 						
 						const STR_SUMMARIZE = 'Summarize';
 						const STR_UNDO = 'Undo';
+						const STR_TRANSCRIPTION_ORIGINAL = 'Transcription (original)';
+						const STR_TRANSCRIPTION_SUMMARY = 'Transcription (summary)';
 						
 						new PKSimpleModal({
-							title: 'Transcription',
+							title: STR_TRANSCRIPTION_ORIGINAL,
 							clss: 'pk_modal_anim',
 							body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
 							ondestroy: function (modal_instance) {
@@ -115,7 +117,7 @@
 										const isShowingSummary = Array.from(modal_instance.els.bottom).some(button => 
 											button.innerHTML.trim() === STR_UNDO
 										);
-										a.download = isShowingSummary ? 'transcription (summarized).txt' : 'transcription (original).txt';
+										a.download = isShowingSummary ? 'transcription_summary.txt' : 'transcription_original.txt';
 										document.body.appendChild(a);
 										a.click();
 										document.body.removeChild(a);
@@ -189,6 +191,10 @@
 
 											// Restore button text
 											updateButtonCaption(targetButton, STR_SUMMARIZE);
+											
+											// Restore original title
+											modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_ORIGINAL;
+
 											return;
 										}
 										
@@ -259,6 +265,9 @@
 
 											// Update UI with summary
 											targetTextarea.value = summary;
+											
+											// Update title to show summary
+											modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_SUMMARY;
 											
 											updateButtonCaption(targetButton, STR_UNDO);
 											enableButton(targetButton);
