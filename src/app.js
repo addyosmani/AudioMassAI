@@ -92,6 +92,7 @@
 						
 						// ninja focus touch <
 						const STR_SUMMARIZE = 'Summarize';
+						const STR_UNDO = 'Undo';
 						// ninja focus touch >
 						
 						new PKSimpleModal({
@@ -112,7 +113,13 @@
 										const url = URL.createObjectURL(blob);
 										const a = document.createElement('a');
 										a.href = url;
-										a.download = 'transcription.txt';
+										// ninja focus touch <
+										// Check if we're showing summary (when Undo button is visible)
+										const isShowingSummary = Array.from(modal_instance.els.bottom).some(button => 
+											button.innerHTML.trim() === STR_UNDO
+										);
+										a.download = isShowingSummary ? 'transcription (summarized).txt' : 'transcription (original).txt';
+										// ninja focus touch >
 										document.body.appendChild(a);
 										a.click();
 										document.body.removeChild(a);
@@ -124,7 +131,6 @@
 									title: STR_SUMMARIZE,
 									clss: 'pk_modal_a_accpt',
 									callback: async function (modal_instance) {
-										const STR_UNDO = 'Undo';
 										const STR_SUMMARIZING = 'Summarizing...';
 
 										const updateButtonCaption = (button, caption) => {
