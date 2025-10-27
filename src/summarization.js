@@ -37,11 +37,7 @@ self.addEventListener('message', async (event) => {
         // Summarize the text
         const output = await summarizer(text, {
             max_length: 150,
-            min_length: 30,
-            length_penalty: 2.0,
-            num_beams: 4,
-            early_stopping: true,
-            do_sample: false
+            min_length: 40
         });
 
         // Extract the generated text from the result
