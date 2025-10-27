@@ -6,7 +6,7 @@ env.allowLocalModels = false;
 // Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
     static task = 'summarization';
-    static model = 'Xenova/t5-small'; // Using T5-small for summarization
+    static model = 'Xenova/t5-small';
     static instance = null;
 
     static async getInstance(progress_callback = null) {
@@ -40,8 +40,7 @@ self.addEventListener('message', async (event) => {
             min_length: 40
         });
 
-        // Extract the generated text from the result
-        const summary = output[0].summary_text;
+        const summary = output[0].summary_text.trim();
 
         // Send the summarization result back to the main thread
         self.postMessage({
