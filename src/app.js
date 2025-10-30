@@ -66,36 +66,43 @@
 			q.fls    = new q._deps.fls ( q );
 
 			q.listenFor('RequestTranscription', async function () {
-				const worker = new Worker('transcription.js', {
+				const transcriptionWorker = new Worker('transcription.js', {
 					type: 'module'
 				});
 			
-				const modal = new PKSimpleModal({
+				const transcribingModal = new PKSimpleModal({
 					title: 'Transcribing Audio...',
 					clss: 'pk_modal_anim',
 					body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
 					setup: function (modal_instance) {
 						q.fireEvent('RequestPause');
 						q.ui.InteractionHandler.checkAndSet('modal');
+						q.ui.KeyHandler.addCallback('modalTemp', function (e) {
+							modal_instance.Destroy();
+						}, [27]);
+					},
+					ondestroy: function (modal_instance) {
+						q.ui.InteractionHandler.on = false;
+						q.ui.KeyHandler.removeCallback('modalTemp');
 					}
 				});
-				modal.Show();
+				transcribingModal.Show();
 			
-				worker.onmessage = (event) => {
+				transcriptionWorker.onmessage = event => {
 					const { status, transcript, message, progress } = event.data;
 
 					if (status === 'progress') {
-						const progressBar = modal.el_body.querySelector('.pk_progress_bar');
+						const progressBar = transcribingModal.el_body.querySelector('.pk_progress_bar');
 						progressBar.style.width = `${progress}%`;
 					} else if (status === 'complete') {
-						modal.Destroy();
+						transcribingModal.Destroy();
 						
 						const STR_SUMMARIZE = 'Summarize';
 						const STR_UNDO = 'Undo';
 						const STR_TRANSCRIPTION_ORIGINAL = 'Transcription (original)';
 						const STR_TRANSCRIPTION_SUMMARY = 'Transcription (summary)';
 						
-						new PKSimpleModal({
+						const transcriptionModal = new PKSimpleModal({
 							title: STR_TRANSCRIPTION_ORIGINAL,
 							clss: 'pk_modal_anim',
 							body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
@@ -150,31 +157,31 @@
 											console.log('Using T5 fallback summarization for Firefox/Safari');
 											
 											return new Promise((resolve, reject) => {
-												const worker = new Worker('summarization.js', {
+												const summarizationWorker = new Worker('summarization.js', {
 													type: 'module'
 												});
 												
-												worker.onmessage = event => {
+												summarizationWorker.onmessage = event => {
 													const { status, summary, message, progress } = event.data;
 
 													if (status === 'progress') {
 														console.log(`Summarization progress: ${progress}%`);
 													} else if (status === 'complete') {
-														worker.terminate();
+														summarizationWorker.terminate();
 														resolve(summary);
 													} else if (status === 'error') {
-														worker.terminate();
+														summarizationWorker.terminate();
 														reject(new Error(message || 'Summarization failed'));
 													}
 												};
 												
-												worker.onerror = error => {
-													worker.terminate();
+												summarizationWorker.onerror = error => {
+													summarizationWorker.terminate();
 													reject(new Error('Worker error: ' + error.message));
 												};
 												
 												// Send text to worker
-												worker.postMessage({ text });
+												summarizationWorker.postMessage({ text });
 											});
 										}
 
@@ -295,12 +302,13 @@
 									modal_instance.Destroy();
 								}, [27]);
 							}
-						}).Show();
-						worker.terminate();
+						});
+						transcriptionModal.Show();
+						transcriptionWorker.terminate();
 					} else if (status === 'error') {
-						modal.Destroy();
+						transcribingModal.Destroy();
 						q.fireEvent('ShowError', `Transcription failed: ${message}`);
-						worker.terminate();
+						transcriptionWorker.terminate();
 					}
 				};
 			
@@ -342,7 +350,7 @@
 					mono16k.buffer instanceof ArrayBuffer &&
 					mono16k.length > 0
 				) {
-					worker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
+					transcriptionWorker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 				} else {
 					console.error('Invalid audio buffer for transfer:', mono16k);
 				}

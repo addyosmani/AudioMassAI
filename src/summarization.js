@@ -1,9 +1,7 @@
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js';
 
-// Skip local model check
 env.allowLocalModels = false;
 
-// Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
     static task = 'summarization';
     static model = 'Xenova/t5-small';
@@ -17,7 +15,7 @@ class PipelineSingleton {
     }
 }
 
-self.addEventListener('message', async (event) => {
+self.addEventListener('message', async event => {
     const { text } = event.data;
 
     if (!text || typeof text !== 'string') {
@@ -29,12 +27,10 @@ self.addEventListener('message', async (event) => {
     }
 
     try {
-        // Get the pipeline instance
-        const summarizer = await PipelineSingleton.getInstance((progress) => {
+        const summarizer = await PipelineSingleton.getInstance(progress => {
             self.postMessage(progress);
         });
 
-        // Summarize the text
         const output = await summarizer(text, {
             max_length: 150,
             min_length: 40
@@ -42,7 +38,6 @@ self.addEventListener('message', async (event) => {
 
         const summary = output[0].summary_text.trim();
 
-        // Send the summarization result back to the main thread
         self.postMessage({
             status: 'complete',
             summary
