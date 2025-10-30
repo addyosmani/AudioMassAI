@@ -27,8 +27,10 @@ self.addEventListener('message', async event => {
     }
 
     try {
-        const summarizer = await PipelineSingleton.getInstance(progress => {
-            self.postMessage(progress);
+        const summarizer = await PipelineSingleton.getInstance(modelState => {
+            // ninja focus touch <
+            self.postMessage(modelState);
+            // ninja focus touch >
         });
 
         const output = await summarizer(text, {
@@ -39,14 +41,18 @@ self.addEventListener('message', async event => {
         const summary = output[0].summary_text.trim();
 
         self.postMessage({
+            // ninja focus touch <
             status: 'complete',
             summary
+            // ninja focus touch >
         });
     } catch (error) {
         console.error('Summarization error:', error);
         self.postMessage({
+            // ninja focus touch <
             status: 'error',
             message: error.message,
+            // ninja focus touch >
         });
     }
 });

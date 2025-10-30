@@ -89,226 +89,258 @@
 				transcribingModal.Show();
 			
 				transcriptionWorker.onmessage = event => {
-					const { status, transcript, message, progress } = event.data;
+					// ninja focus touch <
+					const { transcript, message, status, progress } = event.data;
+					// ninja focus touch >
 
-					if (status === 'progress') {
-						const progressBar = transcribingModal.el_body.querySelector('.pk_progress_bar');
-						progressBar.style.width = `${progress}%`;
-					} else if (status === 'complete') {
-						transcribingModal.Destroy();
-						
-						const STR_SUMMARIZE = 'Summarize';
-						const STR_UNDO = 'Undo';
-						const STR_TRANSCRIPTION_ORIGINAL = 'Transcription (original)';
-						const STR_TRANSCRIPTION_SUMMARY = 'Transcription (summary)';
-						
-						const transcriptionModal = new PKSimpleModal({
-							title: STR_TRANSCRIPTION_ORIGINAL,
-							clss: 'pk_modal_anim',
-							body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
-							ondestroy: function (modal_instance) {
-								q.ui.InteractionHandler.on = false;
-								q.ui.KeyHandler.removeCallback('modalTemp');
-							},
-							buttons: [
-								{
-									title: 'Export',
-									clss: 'pk_modal_a_accpt',
-									callback: function (modal_instance) {
-										const text = modal_instance.el_body.querySelector('textarea').value;
-										const blob = new Blob([text], { type: 'text/plain' });
-										const url = URL.createObjectURL(blob);
-										const a = document.createElement('a');
-										a.href = url;
-										// Check if we're showing summary (when Undo button is visible)
-										const isShowingSummary = Array.from(modal_instance.els.bottom).some(button => 
-											button.innerHTML.trim() === STR_UNDO
-										);
-										a.download = isShowingSummary ? 'transcription_summary.txt' : 'transcription_original.txt';
-										document.body.appendChild(a);
-										a.click();
-										document.body.removeChild(a);
-										URL.revokeObjectURL(url);
-									}
+					switch (status) {
+						case 'progress': {
+							// ninja focus touch <
+							const progressBar = transcribingModal.el_body.querySelector('.pk_progress_bar');
+							progressBar.style.width = `${progress}%`;
+							// ninja focus touch >
+							break;
+						}
+						case 'complete': {
+							transcribingModal.Destroy();
+							
+							const STR_SUMMARIZE = 'Summarize';
+							const STR_UNDO = 'Undo';
+							const STR_TRANSCRIPTION_ORIGINAL = 'Transcription (original)';
+							const STR_TRANSCRIPTION_SUMMARY = 'Transcription (summary)';
+							
+							const transcriptionModal = new PKSimpleModal({
+								title: STR_TRANSCRIPTION_ORIGINAL,
+								clss: 'pk_modal_anim',
+								body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
+								ondestroy: function (modal_instance) {
+									q.ui.InteractionHandler.on = false;
+									q.ui.KeyHandler.removeCallback('modalTemp');
 								},
-								{
-									title: STR_SUMMARIZE,
-									clss: 'pk_modal_a_accpt',
-									callback: async function (modal_instance) {
-										const STR_SUMMARIZING = 'Summarizing...';
+								buttons: [
+									{
+										title: 'Export',
+										clss: 'pk_modal_a_accpt',
+										callback: function (modal_instance) {
+											const text = modal_instance.el_body.querySelector('textarea').value;
+											const blob = new Blob([text], { type: 'text/plain' });
+											const url = URL.createObjectURL(blob);
+											const a = document.createElement('a');
+											a.href = url;
+											// Check if we're showing summary (when Undo button is visible)
+											const isShowingSummary = Array.from(modal_instance.els.bottom).some(button => 
+												button.innerHTML.trim() === STR_UNDO
+											);
+											a.download = isShowingSummary ? 'transcription_summary.txt' : 'transcription_original.txt';
+											document.body.appendChild(a);
+											a.click();
+											document.body.removeChild(a);
+											URL.revokeObjectURL(url);
+										}
+									},
+									{
+										title: STR_SUMMARIZE,
+										clss: 'pk_modal_a_accpt',
+										callback: async function (modal_instance) {
+											const STR_SUMMARIZING = 'Summarizing...';
 
-										const updateButtonCaption = (button, caption) => {
-											button.innerHTML = caption;
-											button.title = caption;
-										};
+											const updateButtonCaption = (button, caption) => {
+												button.innerHTML = caption;
+												button.title = caption;
+											};
 
-										const disableButton = button => {
-											button.style.pointerEvents = 'none';
-											button.setAttribute('aria-disabled', 'true');
-										};
+											const disableButton = button => {
+												button.style.pointerEvents = 'none';
+												button.setAttribute('aria-disabled', 'true');
+											};
 
-										const enableButton = button => {
-											button.style.pointerEvents = '';
-											button.setAttribute('aria-disabled', 'false');
-										};
+											const enableButton = button => {
+												button.style.pointerEvents = '';
+												button.setAttribute('aria-disabled', 'false');
+											};
 
-										// Fallback summarization function for when Chrome Summarizer API is not available or failed
-										async function fallbackSummarization(text) {
-											console.log('Using T5 fallback summarization for Firefox/Safari');
+											// Fallback summarization function for when Chrome Summarizer API is not available or failed
+											async function fallbackSummarization(text) {
+												console.log('Using T5 fallback summarization for Firefox/Safari');
+												
+												return new Promise((resolve, reject) => {
+													const summarizationWorker = new Worker('summarization.js', {
+														type: 'module'
+													});
+													
+													summarizationWorker.onmessage = event => {
+														// ninja focus touch <
+														const { summary, message, status, progress } = event.data;
+														// ninja focus touch >
+
+														switch (status) {
+															case 'progress': {
+																console.log(`Summarization progress: ${progress}%`);
+																break;
+															}
+															case 'complete': {
+																summarizationWorker.terminate();
+																resolve(summary);
+																break;
+															}
+															case 'error': {
+																summarizationWorker.terminate();
+																reject(new Error(message || 'Summarization failed'));
+																break;
+															}
+															// ninja focus touch <
+															default: {
+																// no-op
+																break;
+															}
+															// ninja focus touch >
+														}
+													};
+													
+													summarizationWorker.onerror = error => {
+														summarizationWorker.terminate();
+														reject(new Error('Worker error: ' + error.message));
+													};
+													
+													// Send text to worker
+													summarizationWorker.postMessage({ text });
+												});
+											}
+
+											const targetButton = Array.from(modal_instance.els.bottom).find(button => 
+												button.innerHTML.trim() === STR_SUMMARIZE || button.innerHTML.trim() === STR_UNDO
+											);
+											const targetTextarea = modal_instance.el_body.querySelector('textarea');
+											const transcript = targetTextarea.value;
+
+											// Check if we're in "Undo" mode (showing summary)
+											if (targetButton.innerHTML === STR_UNDO) {
+												// Restore original transcript
+												targetTextarea.value = modal_instance._originalTranscript;
+
+												// Restore button text
+												updateButtonCaption(targetButton, STR_SUMMARIZE);
+												
+												// Restore original title
+												modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_ORIGINAL;
+
+												return;
+											}
 											
-											return new Promise((resolve, reject) => {
-												const summarizationWorker = new Worker('summarization.js', {
-													type: 'module'
+											// Store original transcript for undo functionality
+											modal_instance._originalTranscript = transcript;
+
+											// 1) Feature-detect
+											const hasNativeSummarizer = 'Summarizer' in self;
+
+											// 2) Availability check (Chrome/Edge only)
+											async function getSummarizerIfReady(options) {
+												if (!hasNativeSummarizer) {
+													console.log('Summarizer API is not supported in this browser.');
+
+													return null;
+												}
+												
+												console.log('Summarizer API is supported in this browser.');
+												const availability = await self.Summarizer.availability();
+												if (availability === 'unavailable') {
+													console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
+
+													return null;
+												}
+												
+												console.log('Model can be used.');
+												
+												return await self.Summarizer.create(options);
+											}
+
+											// 3) Summarize (must be triggered by a user gesture)
+											async function summarize(text) {
+												// Try Chrome's built-in Summarizer API
+												const summarizer = await getSummarizerIfReady({
+													sharedContext: 'This is an audio transcription that has been converted from speech to text.',
+													type: 'key-points',
+													format: 'plain-text',
+													length: 'medium',
+													expectedInputLanguages: ['en'],
+													outputLanguage: 'en',
+													expectedContextLanguages: ['en'],
+													monitor(m) {
+														m.addEventListener('download-progress', e => {
+															console.log(`Downloaded ${e.loaded * 100}%`);
+														});
+													}
 												});
 												
-												summarizationWorker.onmessage = event => {
-													const { status, summary, message, progress } = event.data;
-
-													if (status === 'progress') {
-														console.log(`Summarization progress: ${progress}%`);
-													} else if (status === 'complete') {
-														summarizationWorker.terminate();
-														resolve(summary);
-													} else if (status === 'error') {
-														summarizationWorker.terminate();
-														reject(new Error(message || 'Summarization failed'));
+												if (summarizer) {
+													// Check for user activation
+													if (!navigator.userActivation.isActive) {
+														throw new Error('User activation required for Summarizer API');
 													}
-												};
-												
-												summarizationWorker.onerror = error => {
-													summarizationWorker.terminate();
-													reject(new Error('Worker error: ' + error.message));
-												};
-												
-												// Send text to worker
-												summarizationWorker.postMessage({ text });
-											});
-										}
 
-										const targetButton = Array.from(modal_instance.els.bottom).find(button => 
-											button.innerHTML.trim() === STR_SUMMARIZE || button.innerHTML.trim() === STR_UNDO
-										);
-										const targetTextarea = modal_instance.el_body.querySelector('textarea');
-										const transcript = targetTextarea.value;
-
-										// Check if we're in "Undo" mode (showing summary)
-										if (targetButton.innerHTML === STR_UNDO) {
-											// Restore original transcript
-											targetTextarea.value = modal_instance._originalTranscript;
-
-											// Restore button text
-											updateButtonCaption(targetButton, STR_SUMMARIZE);
-											
-											// Restore original title
-											modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_ORIGINAL;
-
-											return;
-										}
-										
-										// Store original transcript for undo functionality
-										modal_instance._originalTranscript = transcript;
-
-										// 1) Feature-detect
-										const hasNativeSummarizer = 'Summarizer' in self;
-
-										// 2) Availability check (Chrome/Edge only)
-										async function getSummarizerIfReady(options) {
-											if (!hasNativeSummarizer) {
-												console.log('Summarizer API is not supported in this browser.');
-
-												return null;
-											}
-										
-											console.log('Summarizer API is supported in this browser.');
-											const availability = await self.Summarizer.availability();
-											if (availability === 'unavailable') {
-												console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
-
-												return null;
-											}
-
-											console.log('Model can be used.');
-										
-											return await self.Summarizer.create(options);
-										}
-
-										// 3) Summarize (must be triggered by a user gesture)
-										async function summarize(text) {
-											// Try Chrome's built-in Summarizer API
-											const summarizer = await getSummarizerIfReady({
-												sharedContext: 'This is an audio transcription that has been converted from speech to text.',
-												type: 'key-points',
-												format: 'plain-text',
-												length: 'medium',
-												expectedInputLanguages: ['en'],
-												outputLanguage: 'en',
-												expectedContextLanguages: ['en'],
-												monitor(m) {
-													m.addEventListener('download-progress', e => {
-														console.log(`Downloaded ${e.loaded * 100}%`);
-													});
+													return await summarizer.summarize(text);
 												}
-											});
-										
-											if (summarizer) {
-												// Check for user activation
-												if (!navigator.userActivation.isActive) {
-													throw new Error('User activation required for Summarizer API');
-												}
-
-												return await summarizer.summarize(text);
+												
+												// Fallback (Firefox/Safari or unavailable)
+												return await fallbackSummarization(text);
 											}
-										
-											// Fallback (Firefox/Safari or unavailable)
-											return await fallbackSummarization(text);
+
+											try {
+												// Show loading state
+												updateButtonCaption(targetButton, STR_SUMMARIZING);
+												disableButton(targetButton);
+												
+												const summary = await summarize(transcript);
+
+												// Update UI with summary
+												targetTextarea.value = summary;
+												
+												// Update title to show summary
+												modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_SUMMARY;
+												
+												updateButtonCaption(targetButton, STR_UNDO);
+												enableButton(targetButton);
+											} catch (error) {
+												// Restore button text
+												updateButtonCaption(targetButton, STR_SUMMARIZE);
+												enableButton(targetButton);
+												
+												alert(error?.message || 'An error occurred while summarizing the transcription. Please try again.');
+												return;
+											}
 										}
-
-										try {
-											// Show loading state
-											updateButtonCaption(targetButton, STR_SUMMARIZING);
-											disableButton(targetButton);
-
-											const summary = await summarize(transcript);
-
-											// Update UI with summary
-											targetTextarea.value = summary;
-											
-											// Update title to show summary
-											modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_SUMMARY;
-											
-											updateButtonCaption(targetButton, STR_UNDO);
-											enableButton(targetButton);
-										} catch (error) {
-											// Restore button text
-											updateButtonCaption(targetButton, STR_SUMMARIZE);
-											enableButton(targetButton);
-
-											alert(error?.message || 'An error occurred while summarizing the transcription. Please try again.');
-											return;
+									},
+									{
+										title: 'Close',
+										clss: 'pk_modal_a_accpt',
+										callback: function (modal_instance) {
+											modal_instance.Destroy();
 										}
 									}
-								},
-								{
-									title: 'Close',
-									clss: 'pk_modal_a_accpt',
-									callback: function (modal_instance) {
+								],
+								setup: function (modal_instance) {
+									q.ui.InteractionHandler.checkAndSet('modal');
+									q.ui.KeyHandler.addCallback('modalTemp', function (e) {
 										modal_instance.Destroy();
-									}
+									}, [27]);
 								}
-							],
-							setup: function (modal_instance) {
-								q.ui.InteractionHandler.checkAndSet('modal');
-								q.ui.KeyHandler.addCallback('modalTemp', function (e) {
-									modal_instance.Destroy();
-								}, [27]);
-							}
-						});
-						transcriptionModal.Show();
-						transcriptionWorker.terminate();
-					} else if (status === 'error') {
-						transcribingModal.Destroy();
-						q.fireEvent('ShowError', `Transcription failed: ${message}`);
-						transcriptionWorker.terminate();
+							});
+							transcriptionModal.Show();
+							transcriptionWorker.terminate();
+							break;
+						}
+						case 'error': {
+							transcribingModal.Destroy();
+							q.fireEvent('ShowError', `Transcription failed: ${message}`);
+							transcriptionWorker.terminate();
+							break;
+						}
+						// ninja focus touch <
+						default: {
+							// no-op
+							break;
+						}
+						// ninja focus touch >
 					}
 				};
 			
@@ -352,7 +384,9 @@
 				) {
 					transcriptionWorker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 				} else {
+					// ninja focus touch <
 					console.error('Invalid audio buffer for transfer:', mono16k);
+					// ninja focus touch >
 				}
 			});
 			
