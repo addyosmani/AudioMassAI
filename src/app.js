@@ -73,7 +73,9 @@
 				const transcribingModal = new PKSimpleModal({
 					title: 'Transcribing Audio...',
 					clss: 'pk_modal_anim',
+					// ninja focus touch <
 					body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
+					// ninja focus touch >
 					setup: function (modal_instance) {
 						q.fireEvent('RequestPause');
 						q.ui.InteractionHandler.checkAndSet('modal');
@@ -113,6 +115,12 @@
 								title: STR_TRANSCRIPTION_ORIGINAL,
 								clss: 'pk_modal_anim',
 								body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
+								setup: function (modal_instance) {
+									q.ui.InteractionHandler.checkAndSet('modal');
+									q.ui.KeyHandler.addCallback('modalTemp', function (e) {
+										modal_instance.Destroy();
+									}, [27]);
+								},
 								ondestroy: function (modal_instance) {
 									q.ui.InteractionHandler.on = false;
 									q.ui.KeyHandler.removeCallback('modalTemp');
@@ -317,13 +325,7 @@
 											modal_instance.Destroy();
 										}
 									}
-								],
-								setup: function (modal_instance) {
-									q.ui.InteractionHandler.checkAndSet('modal');
-									q.ui.KeyHandler.addCallback('modalTemp', function (e) {
-										modal_instance.Destroy();
-									}, [27]);
-								}
+								]
 							});
 							transcriptionModal.Show();
 							transcriptionWorker.terminate();
