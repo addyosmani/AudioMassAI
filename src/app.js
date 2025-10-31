@@ -74,7 +74,8 @@
 					title: 'Transcribing Audio...',
 					clss: 'pk_modal_anim',
 					// ninja focus touch <
-					body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
+					// body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
+					body: '',
 					// ninja focus touch >
 					setup: function (modal_instance) {
 						q.fireEvent('RequestPause');
@@ -92,18 +93,56 @@
 			
 				transcriptionWorker.onmessage = event => {
 					// ninja focus touch <
-					const { transcript, message, status, progress } = event.data;
+					const { transcript, message, ...modelState } = event.data;
 					// ninja focus touch >
 
-					switch (status) {
+					switch (modelState.status) {
+						// ninja focus touch <
+						case "initiate": {
+							const progressBarContainer = document.createElement('div');
+							progressBarContainer.className = 'pk_progress';
+							progressBarContainer.id = modelState.file;
+							
+							const progressBar = document.createElement('div');
+							progressBar.className = 'pk_progress_bar';
+
+							const fileTextSpan = document.createElement('span');
+							fileTextSpan.style.marginLeft = '4px';
+							fileTextSpan.style.marginRight = '2px';
+							fileTextSpan.textContent = `${modelState.file}`;
+
+							const percentTextSpan = document.createElement('span');
+							percentTextSpan.style.marginLeft = '2px';
+							percentTextSpan.style.marginRight = '4px';
+							
+							progressBar.appendChild(fileTextSpan);
+							progressBar.appendChild(percentTextSpan);
+							progressBarContainer.appendChild(progressBar);
+							transcribingModal.el_body.appendChild(progressBarContainer);
+							break;
+						}
+						// ninja focus touch >
 						case 'progress': {
 							// ninja focus touch <
-							const progressBar = transcribingModal.el_body.querySelector('.pk_progress_bar');
-							progressBar.style.width = `${progress}%`;
+							const progressBarContainer = document.getElementById(modelState.file);
+							const progressBar = progressBarContainer.querySelector('div');
+							progressBar.style.width = `${modelState.progress}%`;
+							const percentTextSpan = progressBar.querySelector('span:last-child');
+							percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
 							// ninja focus touch >
 							break;
 						}
+						// ninja focus touch <
+						case 'done': {
+							// const progressBarContainer = document.getElementById(modelState.file);
+							// progressBarContainer.remove();
+							break;
+						}
+						// ninja focus touch >
 						case 'complete': {
+							// ninja focus touch <
+							// return;
+							// ninja focus touch >
 							transcribingModal.Destroy();
 							
 							const STR_SUMMARIZE = 'Summarize';
