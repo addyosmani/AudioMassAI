@@ -73,7 +73,7 @@
 				const transcribingModal = new PKSimpleModal({
 					title: 'Audio Transcription',
 					clss: 'pk_modal_anim',
-					body: '',
+					body: '<p>Please wait, preparing transcription...</p>',
 					setup: function (modal_instance) {
 						q.fireEvent('RequestPause');
 						q.ui.InteractionHandler.checkAndSet('modal');
@@ -93,13 +93,10 @@
 
 					switch (modelState.status) {
 						case "initiate": {
-							let subTitle = transcribingModal.el_body.querySelector('p');
-							if (!subTitle || subTitle.textContent.trim() === '') {
-								if (!subTitle) {
-									subTitle = document.createElement('p');
-									transcribingModal.el_body.appendChild(subTitle);
-								}
-								subTitle.textContent = 'Loading transcription model...';
+							const subTitle = transcribingModal.el_body.querySelector('p');
+							let subTitleText = 'Loading transcription model...';
+							if (subTitle.textContent.trim() !== subTitleText) {
+								subTitle.textContent = subTitleText;
 							}
 
 							const progressBar = document.createElement('div');
