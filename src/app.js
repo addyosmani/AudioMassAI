@@ -155,7 +155,7 @@
 							const transcriptionModal = new PKSimpleModal({
 								title: STR_TRANSCRIPTION_ORIGINAL,
 								clss: 'pk_modal_anim',
-								body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea>`,
+								body: `<textarea readonly style="width: 100%; height: 200px;">${transcript}</textarea><p></p>`,
 								setup: function (modal_instance) {
 									q.ui.InteractionHandler.checkAndSet('modal');
 									q.ui.KeyHandler.addCallback('modalTemp', function (e) {
@@ -225,14 +225,30 @@
 														switch (modelState.status) {
 															// ninja focus touch <
 															case 'initiate': {
+																createProgressBar(modal_instance.el_body, modelState, 'Loading summarization model...');
 																break;
 															}
 															case 'progress': {
-																console.log(`Summarization progress: ${progress}%`);
+																updateProgressBar(modal_instance.el_body, modelState);
+																break;
+															}
+															case 'done': {
+																break;
+															}
+															case 'ready': {
+																const subTitle = modal_instance.el_body.querySelector('p');
+																subTitle.textContent = 'Summarizing transcript...';
 																break;
 															}
 															// ninja focus touch >
 															case 'complete': {
+																// ninja focus touch <
+																const subTitle = modal_instance.el_body.querySelector('p');
+																subTitle.textContent = '';
+																const progressBars = modal_instance.el_body.querySelectorAll('.pk_progress');
+																progressBars.forEach(bar => bar.remove());
+																// ninja focus touch >
+
 																summarizationWorker.terminate();
 																resolve(summary);
 																break;
