@@ -30,10 +30,7 @@ self.addEventListener('message', async event => {
 
     try {
         const transcriber = await PipelineSingleton.getInstance(modelState => {
-            // ninja focus touch <
-            console.log('ninja focus touch: modelState =>', modelState);
             self.postMessage(modelState);
-            // ninja focus touch >
         });
         
         // Ensure Float32Array
@@ -46,17 +43,13 @@ self.addEventListener('message', async event => {
         });
 
         self.postMessage({
-            // ninja focus touch <
             status: 'complete',
             transcript: output.text.trim(),
-            // ninja focus touch >
         });
     } catch (error) {
         self.postMessage({
-            // ninja focus touch <
             status: 'error',
             message: error.message,
-            // ninja focus touch >
         });
     }
 });

@@ -73,10 +73,7 @@
 				const transcribingModal = new PKSimpleModal({
 					title: 'Audio Transcription',
 					clss: 'pk_modal_anim',
-					// ninja focus touch <
-					// body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
 					body: '',
-					// ninja focus touch >
 					setup: function (modal_instance) {
 						q.fireEvent('RequestPause');
 						q.ui.InteractionHandler.checkAndSet('modal');
@@ -92,12 +89,9 @@
 				transcribingModal.Show();
 			
 				transcriptionWorker.onmessage = event => {
-					// ninja focus touch <
 					const { transcript, message, ...modelState } = event.data;
-					// ninja focus touch >
 
 					switch (modelState.status) {
-						// ninja focus touch <
 						case "initiate": {
 							let subTitle = transcribingModal.el_body.querySelector('p');
 							if (!subTitle || subTitle.textContent.trim() === '') {
@@ -130,21 +124,15 @@
 							transcribingModal.el_body.appendChild(progressBar);
 							break;
 						}
-						// ninja focus touch >
 						case 'progress': {
-							// ninja focus touch <
 							const progressBar = document.getElementById(modelState.file);
 							const progressBarInner = progressBar.querySelector('div');
 							progressBarInner.style.width = `${modelState.progress}%`;
 							const percentTextSpan = progressBarInner.querySelector('span:last-child');
 							percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
-							// ninja focus touch >
 							break;
 						}
-						// ninja focus touch <
 						case 'done': {
-							// const progressBarContainer = document.getElementById(modelState.file);
-							// progressBarContainer.remove();
 							break;
 						}
 						case 'ready': {
@@ -152,11 +140,7 @@
 							subTitle.textContent = 'Transcribing audio...';
 							break;
 						}
-						// ninja focus touch >
 						case 'complete': {
-							// ninja focus touch <
-							// return;
-							// ninja focus touch >
 							transcribingModal.Destroy();
 							
 							const STR_SUMMARIZE = 'Summarize';
