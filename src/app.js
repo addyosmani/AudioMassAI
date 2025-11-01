@@ -218,12 +218,9 @@
 													});
 													
 													summarizationWorker.onmessage = event => {
-														// ninja focus touch <
 														const { summary, message, ...modelState } = event.data;
-														// ninja focus touch >
 
 														switch (modelState.status) {
-															// ninja focus touch <
 															case 'initiate': {
 																createProgressBar(modal_instance.el_body, modelState, 'Loading summarization model...');
 																break;
@@ -240,14 +237,11 @@
 																subTitle.textContent = 'Summarizing transcript...';
 																break;
 															}
-															// ninja focus touch >
 															case 'complete': {
-																// ninja focus touch <
 																const subTitle = modal_instance.el_body.querySelector('p');
 																subTitle.textContent = '';
 																const progressBars = modal_instance.el_body.querySelectorAll('.pk_progress');
 																progressBars.forEach(bar => bar.remove());
-																// ninja focus touch >
 
 																summarizationWorker.terminate();
 																resolve(summary);
