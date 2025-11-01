@@ -261,12 +261,10 @@
 																reject(new Error(message || 'Summarization failed'));
 																break;
 															}
-															// ninja focus touch <
 															default: {
 																// no-op
 																break;
 															}
-															// ninja focus touch >
 														}
 													};
 													
@@ -378,7 +376,7 @@
 												updateButtonCaption(targetButton, STR_SUMMARIZE);
 												enableButton(targetButton);
 												
-												alert(error?.message || 'An error occurred while summarizing the transcription. Please try again.');
+												q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
 												return;
 											}
 										}
@@ -402,12 +400,10 @@
 							transcriptionWorker.terminate();
 							break;
 						}
-						// ninja focus touch <
 						default: {
 							// no-op
 							break;
 						}
-						// ninja focus touch >
 					}
 				};
 			
@@ -451,9 +447,7 @@
 				) {
 					transcriptionWorker.postMessage({ audio: mono16k, sampling_rate: 16000 }, [mono16k.buffer]);
 				} else {
-					// ninja focus touch <
-					console.error('Invalid audio buffer for transfer:', mono16k);
-					// ninja focus touch >
+					q.fireEvent('ShowError', `Invalid audio buffer for transfer: ${mono16k}`);
 				}
 			});
 			
