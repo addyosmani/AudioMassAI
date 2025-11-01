@@ -71,7 +71,7 @@
 				});
 			
 				const transcribingModal = new PKSimpleModal({
-					title: 'Transcribing Audio...',
+					title: 'Audio Transcription',
 					clss: 'pk_modal_anim',
 					// ninja focus touch <
 					// body: '<p>Please wait, transcribing audio...</p><div class="pk_progress"><div class="pk_progress_bar"></div></div>',
@@ -99,12 +99,21 @@
 					switch (modelState.status) {
 						// ninja focus touch <
 						case "initiate": {
-							const progressBarContainer = document.createElement('div');
-							progressBarContainer.className = 'pk_progress';
-							progressBarContainer.id = modelState.file;
-							
+							let subTitle = transcribingModal.el_body.querySelector('p');
+							if (!subTitle || subTitle.textContent.trim() === '') {
+								if (!subTitle) {
+									subTitle = document.createElement('p');
+									transcribingModal.el_body.appendChild(subTitle);
+								}
+								subTitle.textContent = 'Loading transcription model...';
+							}
+
 							const progressBar = document.createElement('div');
-							progressBar.className = 'pk_progress_bar';
+							progressBar.className = 'pk_progress';
+							progressBar.id = modelState.file;
+							
+							const progressBarInner = document.createElement('div');
+							progressBarInner.className = 'pk_progress_bar';
 
 							const fileTextSpan = document.createElement('span');
 							fileTextSpan.style.marginLeft = '4px';
@@ -115,19 +124,19 @@
 							percentTextSpan.style.marginLeft = '2px';
 							percentTextSpan.style.marginRight = '4px';
 							
-							progressBar.appendChild(fileTextSpan);
-							progressBar.appendChild(percentTextSpan);
-							progressBarContainer.appendChild(progressBar);
-							transcribingModal.el_body.appendChild(progressBarContainer);
+							progressBarInner.appendChild(fileTextSpan);
+							progressBarInner.appendChild(percentTextSpan);
+							progressBar.appendChild(progressBarInner);
+							transcribingModal.el_body.appendChild(progressBar);
 							break;
 						}
 						// ninja focus touch >
 						case 'progress': {
 							// ninja focus touch <
-							const progressBarContainer = document.getElementById(modelState.file);
-							const progressBar = progressBarContainer.querySelector('div');
-							progressBar.style.width = `${modelState.progress}%`;
-							const percentTextSpan = progressBar.querySelector('span:last-child');
+							const progressBar = document.getElementById(modelState.file);
+							const progressBarInner = progressBar.querySelector('div');
+							progressBarInner.style.width = `${modelState.progress}%`;
+							const percentTextSpan = progressBarInner.querySelector('span:last-child');
 							percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
 							// ninja focus touch >
 							break;
@@ -136,6 +145,11 @@
 						case 'done': {
 							// const progressBarContainer = document.getElementById(modelState.file);
 							// progressBarContainer.remove();
+							break;
+						}
+						case 'ready': {
+							const subTitle = transcribingModal.el_body.querySelector('p');
+							subTitle.textContent = 'Transcribing audio...';
 							break;
 						}
 						// ninja focus touch >
