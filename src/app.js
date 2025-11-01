@@ -88,12 +88,7 @@
 				});
 				transcribingModal.Show();
 
-				function createProgressBar(modalBody, modelState, subTitleText) {
-					const subTitle = modalBody.querySelector('p');
-					if (subTitle.textContent.trim() !== subTitleText) {
-						subTitle.textContent = subTitleText;
-					}
-
+				function createProgressBar(modalBody, modelState) {
 					const progressBar = document.createElement('div');
 					progressBar.className = 'pk_progress';
 					progressBar.id = modelState.file;
@@ -126,7 +121,9 @@
 
 				function updateSubTitle(modalBody, subTitleText) {
 					const subTitle = modalBody.querySelector('p');
-					subTitle.textContent = subTitleText;
+					if (subTitle.textContent.trim() !== subTitleText) {
+						subTitle.textContent = subTitleText;
+					}
 				}
 
 				function removeProgressBars(modalBody) {
@@ -138,8 +135,9 @@
 					const { transcript, message, ...modelState } = event.data;
 
 					switch (modelState.status) {
-						case "initiate": {
-							createProgressBar(transcribingModal.el_body, modelState, 'Loading transcription model...');
+						case 'initiate': {
+							updateSubTitle(transcribingModal.el_body, 'Loading transcription model...');
+							createProgressBar(transcribingModal.el_body, modelState);
 							break;
 						}
 						case 'progress': {
@@ -234,7 +232,8 @@
 
 														switch (modelState.status) {
 															case 'initiate': {
-																createProgressBar(modal_instance.el_body, modelState, 'Loading summarization model...');
+																updateSubTitle(modal_instance.el_body, 'Loading summarization model...');
+																createProgressBar(modal_instance.el_body, modelState);
 																break;
 															}
 															case 'progress': {
@@ -327,6 +326,8 @@
 
 											// 3) Summarize (must be triggered by a user gesture)
 											async function summarize(text) {
+												updateSubTitle(modal_instance.el_body, 'Please wait, preparing summarization...');
+
 												// Try Chrome's built-in Summarizer API
 												const summarizer = await getSummarizerIfReady({
 													sharedContext: 'This is an audio transcription that has been converted from speech to text.',
@@ -349,7 +350,11 @@
 														throw new Error('User activation required for Summarizer API');
 													}
 
-													return await summarizer.summarize(text);
+													updateSubTitle(modal_instance.el_body, 'Summarizing transcript...');
+													const summary = await summarizer.summarize(text);
+													updateSubTitle(modal_instance.el_body, '');
+
+													return summary;
 												}
 												
 												// Fallback (Firefox/Safari or unavailable)
