@@ -123,6 +123,18 @@
 					const percentTextSpan = progressBarInner.querySelector('span:last-child');
 					percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
 				}
+
+				// ninja focus touch <
+				function updateSubTitle(modalBody, subTitleText) {
+					const subTitle = modalBody.querySelector('p');
+					subTitle.textContent = subTitleText;
+				}
+
+				function removeProgressBars(modalBody) {
+					const progressBars = modalBody.querySelectorAll('.pk_progress');
+					progressBars.forEach(item => item.remove());
+				}
+				// ninja focus touch >
 			
 				transcriptionWorker.onmessage = event => {
 					const { transcript, message, ...modelState } = event.data;
@@ -140,11 +152,16 @@
 							break;
 						}
 						case 'ready': {
-							const subTitle = transcribingModal.el_body.querySelector('p');
-							subTitle.textContent = 'Transcribing audio...';
+							// ninja focus touch <
+							updateSubTitle(transcribingModal.el_body, 'Transcribing audio...');
+							removeProgressBars(transcribingModal.el_body);
+							// ninja focus touch >
 							break;
 						}
 						case 'complete': {
+							// ninja focus touch <
+							updateSubTitle(transcribingModal.el_body, '');
+							// ninja focus touch >
 							transcribingModal.Destroy();
 							
 							const STR_SUMMARIZE = 'Summarize';
@@ -233,15 +250,16 @@
 																break;
 															}
 															case 'ready': {
-																const subTitle = modal_instance.el_body.querySelector('p');
-																subTitle.textContent = 'Summarizing transcript...';
+																// ninja focus touch <
+																updateSubTitle(modal_instance.el_body, 'Summarizing transcript...');
+																removeProgressBars(modal_instance.el_body);
+																// ninja focus touch >
 																break;
 															}
 															case 'complete': {
-																const subTitle = modal_instance.el_body.querySelector('p');
-																subTitle.textContent = '';
-																const progressBars = modal_instance.el_body.querySelectorAll('.pk_progress');
-																progressBars.forEach(bar => bar.remove());
+																// ninja focus touch <
+																updateSubTitle(modal_instance.el_body, '');
+																// ninja focus touch >
 
 																summarizationWorker.terminate();
 																resolve(summary);
