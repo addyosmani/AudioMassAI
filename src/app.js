@@ -124,7 +124,6 @@
 					percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
 				}
 
-				// ninja focus touch <
 				function updateSubTitle(modalBody, subTitleText) {
 					const subTitle = modalBody.querySelector('p');
 					subTitle.textContent = subTitleText;
@@ -134,7 +133,6 @@
 					const progressBars = modalBody.querySelectorAll('.pk_progress');
 					progressBars.forEach(item => item.remove());
 				}
-				// ninja focus touch >
 			
 				transcriptionWorker.onmessage = event => {
 					const { transcript, message, ...modelState } = event.data;
@@ -152,16 +150,13 @@
 							break;
 						}
 						case 'ready': {
-							// ninja focus touch <
 							updateSubTitle(transcribingModal.el_body, 'Transcribing audio...');
 							removeProgressBars(transcribingModal.el_body);
-							// ninja focus touch >
 							break;
 						}
 						case 'complete': {
-							// ninja focus touch <
 							updateSubTitle(transcribingModal.el_body, '');
-							// ninja focus touch >
+
 							transcribingModal.Destroy();
 							
 							const STR_SUMMARIZE = 'Summarize';
@@ -250,16 +245,12 @@
 																break;
 															}
 															case 'ready': {
-																// ninja focus touch <
 																updateSubTitle(modal_instance.el_body, 'Summarizing transcript...');
 																removeProgressBars(modal_instance.el_body);
-																// ninja focus touch >
 																break;
 															}
 															case 'complete': {
-																// ninja focus touch <
 																updateSubTitle(modal_instance.el_body, '');
-																// ninja focus touch >
 
 																summarizationWorker.terminate();
 																resolve(summary);
