@@ -87,46 +87,53 @@
 					}
 				});
 				transcribingModal.Show();
+
+				function createProgressBar(modalBody, modelState, subTitleText) {
+					const subTitle = modalBody.querySelector('p');
+					if (subTitle.textContent.trim() !== subTitleText) {
+						subTitle.textContent = subTitleText;
+					}
+
+					const progressBar = document.createElement('div');
+					progressBar.className = 'pk_progress';
+					progressBar.id = modelState.file;
+					
+					const progressBarInner = document.createElement('div');
+					progressBarInner.className = 'pk_progress_bar';
+
+					const fileTextSpan = document.createElement('span');
+					fileTextSpan.style.marginLeft = '4px';
+					fileTextSpan.style.marginRight = '2px';
+					fileTextSpan.textContent = `${modelState.file}`;
+
+					const percentTextSpan = document.createElement('span');
+					percentTextSpan.style.marginLeft = '2px';
+					percentTextSpan.style.marginRight = '4px';
+					
+					progressBarInner.appendChild(fileTextSpan);
+					progressBarInner.appendChild(percentTextSpan);
+					progressBar.appendChild(progressBarInner);
+					modalBody.appendChild(progressBar);
+				}
+
+				function updateProgressBar(modalBody, modelState) {
+					const progressBar = modalBody.querySelector(`#${CSS.escape(modelState.file)}`);
+					const progressBarInner = progressBar.querySelector('div');
+					progressBarInner.style.width = `${modelState.progress}%`;
+					const percentTextSpan = progressBarInner.querySelector('span:last-child');
+					percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
+				}
 			
 				transcriptionWorker.onmessage = event => {
 					const { transcript, message, ...modelState } = event.data;
 
 					switch (modelState.status) {
 						case "initiate": {
-							const subTitle = transcribingModal.el_body.querySelector('p');
-							let subTitleText = 'Loading transcription model...';
-							if (subTitle.textContent.trim() !== subTitleText) {
-								subTitle.textContent = subTitleText;
-							}
-
-							const progressBar = document.createElement('div');
-							progressBar.className = 'pk_progress';
-							progressBar.id = modelState.file;
-							
-							const progressBarInner = document.createElement('div');
-							progressBarInner.className = 'pk_progress_bar';
-
-							const fileTextSpan = document.createElement('span');
-							fileTextSpan.style.marginLeft = '4px';
-							fileTextSpan.style.marginRight = '2px';
-							fileTextSpan.textContent = `${modelState.file}`;
-
-							const percentTextSpan = document.createElement('span');
-							percentTextSpan.style.marginLeft = '2px';
-							percentTextSpan.style.marginRight = '4px';
-							
-							progressBarInner.appendChild(fileTextSpan);
-							progressBarInner.appendChild(percentTextSpan);
-							progressBar.appendChild(progressBarInner);
-							transcribingModal.el_body.appendChild(progressBar);
+							createProgressBar(transcribingModal.el_body, modelState, 'Loading transcription model...');
 							break;
 						}
 						case 'progress': {
-							const progressBar = document.getElementById(modelState.file);
-							const progressBarInner = progressBar.querySelector('div');
-							progressBarInner.style.width = `${modelState.progress}%`;
-							const percentTextSpan = progressBarInner.querySelector('span:last-child');
-							percentTextSpan.textContent = `(${modelState.progress.toFixed(2)}%)`;
+							updateProgressBar(transcribingModal.el_body, modelState);
 							break;
 						}
 						case 'done': {
@@ -212,14 +219,19 @@
 													
 													summarizationWorker.onmessage = event => {
 														// ninja focus touch <
-														const { summary, message, status, progress } = event.data;
+														const { summary, message, ...modelState } = event.data;
 														// ninja focus touch >
 
-														switch (status) {
+														switch (modelState.status) {
+															// ninja focus touch <
+															case 'initiate': {
+																break;
+															}
 															case 'progress': {
 																console.log(`Summarization progress: ${progress}%`);
 																break;
 															}
+															// ninja focus touch >
 															case 'complete': {
 																summarizationWorker.terminate();
 																resolve(summary);
