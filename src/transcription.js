@@ -47,6 +47,7 @@ self.addEventListener('message', async event => {
             transcript: output.text.trim(),
         });
     } catch (error) {
+        console.error('Transcription error:', error);
         self.postMessage({
             status: 'error',
             message: error.message,

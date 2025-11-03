@@ -381,6 +381,9 @@
 												updateButtonCaption(targetButton, STR_SUMMARIZE);
 												enableButton(targetButton);
 												
+												updateSubTitle(modal_instance.el_body, '');
+												removeProgressBars(modal_instance.el_body);
+												
 												q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
 												return;
 											}
