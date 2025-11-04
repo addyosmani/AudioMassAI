@@ -218,7 +218,7 @@
 												button.setAttribute('aria-disabled', 'false');
 											};
 
-											// Fallback summarization function for when Chrome Summarizer API is not available or failed
+											// Fallback summarization function for when Chrome Summarizer API is not available
 											async function fallbackSummarization(text) {
 												console.log('Using T5 fallback summarization for Firefox/Safari');
 												
@@ -355,10 +355,10 @@
 													updateSubTitle(modal_instance.el_body, '');
 
 													return summary;
+												} else {
+													// Fallback (Firefox/Safari or unavailable)
+													return await fallbackSummarization(text);
 												}
-												
-												// Fallback (Firefox/Safari or unavailable)
-												return await fallbackSummarization(text);
 											}
 
 											try {
