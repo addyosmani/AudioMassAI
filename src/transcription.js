@@ -23,7 +23,7 @@ self.addEventListener('message', async event => {
     if (!audio) {
         self.postMessage({
             status: 'error',
-            message: 'No audio data received.',
+            message: 'No audio data received.'
         });
         return;
     }
@@ -39,18 +39,18 @@ self.addEventListener('message', async event => {
         const output = await transcriber(pcm, {
             sampling_rate,
             chunk_length_s: 30,
-            stride_length_s: 5,
+            stride_length_s: 5
         });
 
         self.postMessage({
             status: 'complete',
-            transcript: output.text.trim(),
+            transcript: output.text.trim()
         });
     } catch (error) {
         console.error('Transcription error:', error);
         self.postMessage({
             status: 'error',
-            message: error.message,
+            message: error.message
         });
     }
 });

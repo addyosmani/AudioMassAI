@@ -21,7 +21,7 @@ self.addEventListener('message', async event => {
     if (!text || typeof text !== 'string') {
         self.postMessage({
             status: 'error',
-            message: 'No text data received or invalid format.',
+            message: 'No text data received or invalid format.'
         });
         return;
     }
@@ -46,7 +46,7 @@ self.addEventListener('message', async event => {
         console.error('Summarization error:', error);
         self.postMessage({
             status: 'error',
-            message: error.message,
+            message: error.message
         });
     }
 });
