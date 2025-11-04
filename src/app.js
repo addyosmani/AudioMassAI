@@ -372,13 +372,9 @@
 																	confirmation_instance.Destroy();
 																}, [27]);
 																
-																// Override the default CANCEL button behavior
+																// Change CANCEL button text to "No"
 																const cancelButton = confirmation_instance.el.getElementsByClassName('pk_modal_cancel')[0];
-																if (cancelButton) {
-																	cancelButton.onclick = function() {
-																		confirmation_instance.Destroy();
-																	};
-																}
+																cancelButton.innerHTML = 'No';
 															},
 															ondestroy: function (confirmation_instance) {
 																q.ui.InteractionHandler.on = false;
