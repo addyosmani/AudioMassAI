@@ -284,7 +284,7 @@
 											const transcript = targetTextarea.value;
 
 											// Check if we're in "Undo" mode (showing summary)
-											if (targetButton.innerHTML === STR_UNDO) {
+											if (targetButton.innerHTML.trim() === STR_UNDO) {
 												// Restore original transcript
 												targetTextarea.value = modal_instance._originalTranscript;
 
@@ -300,18 +300,17 @@
 											// Store original transcript for undo functionality
 											modal_instance._originalTranscript = transcript;
 
-											// 1) Feature-detect
-											const hasNativeSummarizer = 'Summarizer' in self;
-
-											// 2) Availability check (Chrome/Edge only)
 											async function getSummarizerIfReady(options) {
-												if (!hasNativeSummarizer) {
+												// 1) Feature-detect
+												if (!('Summarizer' in self)) {
 													console.log('Summarizer API is not supported in this browser.');
 
 													return null;
 												}
 												
 												console.log('Summarizer API is supported in this browser.');
+
+												// 2) Availability check (Chrome/Edge only)
 												const availability = await self.Summarizer.availability();
 												if (availability === 'unavailable') {
 													console.warn('Model cannot be used (hardware limitations, OS not supported, etc.).');
@@ -323,11 +322,8 @@
 												
 												return await self.Summarizer.create(options);
 											}
-
-											// 3) Summarize (must be triggered by a user gesture)
+											
 											async function summarize(text) {
-												updateSubTitle(modal_instance.el_body, 'Please wait, preparing summarization...');
-
 												// Try Chrome's built-in Summarizer API
 												const summarizer = await getSummarizerIfReady({
 													sharedContext: 'This is an audio transcription that has been converted from speech to text.',
@@ -345,6 +341,7 @@
 												});
 												
 												if (summarizer) {
+													// 3) Summarize (must be triggered by a user gesture)
 													// Check for user activation
 													if (!navigator.userActivation.isActive) {
 														throw new Error('User activation required for Summarizer API');
@@ -357,7 +354,9 @@
 													return summary;
 												} else {
 													// Fallback (Firefox/Safari or unavailable)
-													return await fallbackSummarization(text);
+													const summary = await fallbackSummarization(text);
+													
+													return summary;
 												}
 											}
 
@@ -365,6 +364,8 @@
 												// Show loading state
 												updateButtonCaption(targetButton, STR_SUMMARIZING);
 												disableButton(targetButton);
+
+												updateSubTitle(modal_instance.el_body, 'Please wait, preparing summarization...');
 												
 												const summary = await summarize(transcript);
 
