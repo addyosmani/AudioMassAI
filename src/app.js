@@ -360,9 +360,9 @@
 													return new Promise((resolve, reject) => {
 														let isConfirmed = false;
 														const confirmationModal = new PKSimpleModal({
-															title: 'Confirm Model Download',
+															title: 'Confirm Model Load',
 															clss: 'pk_modal_anim',
-															body: '<p>Summarization requires downloading a ~462MB model. Proceed?</p>',
+															body: '<p>Summarization requires loading a ~462MB model. Proceed?</p>',
 															setup: function (confirmation_instance) {
 																q.ui.InteractionHandler.checkAndSet('modal');
 																q.ui.KeyHandler.addCallback('modalTemp', function (e) {
