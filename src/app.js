@@ -218,6 +218,8 @@
 												button.setAttribute('aria-disabled', 'false');
 											};
 
+											const SUMMARIZATION_MODEL_SIZE = '462MB';
+
 											// Fallback summarization function for when Chrome Summarizer API is not available
 											async function fallbackSummarization(text) {
 												console.log('Using T5 fallback summarization for Firefox/Safari');
@@ -232,7 +234,7 @@
 
 														switch (modelState.status) {
 															case 'initiate': {
-																updateSubTitle(modal_instance.el_body, 'Loading summarization model...');
+																updateSubTitle(modal_instance.el_body, `Loading summarization model (~${SUMMARIZATION_MODEL_SIZE})...`);
 																createProgressBar(modal_instance.el_body, modelState);
 																break;
 															}
@@ -362,7 +364,7 @@
 														const confirmationModal = new PKSimpleModal({
 															title: 'Confirm Model Load',
 															clss: 'pk_modal_anim',
-															body: '<p>Summarization requires loading a ~462MB model. Proceed?</p>',
+															body: `<p>Summarization requires loading a ~${SUMMARIZATION_MODEL_SIZE} model. Proceed?</p>`,
 															setup: function (confirmation_instance) {
 																q.ui.InteractionHandler.checkAndSet('modal');
 																q.ui.KeyHandler.addCallback('modalTemp', function (e) {
