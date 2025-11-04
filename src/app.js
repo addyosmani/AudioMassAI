@@ -322,6 +322,10 @@
 												
 												return await self.Summarizer.create(options);
 											}
+
+											// ninja focus touch <
+											const STR_SUMMARIZATION_CANCELLED_BY_USER = 'Summarization cancelled by user';
+											// ninja focus touch >
 											
 											async function summarize(text) {
 												// Try Chrome's built-in Summarizer API
@@ -382,7 +386,7 @@
 																
 																// If not confirmed, reject the promise
 																if (!isConfirmed) {
-																	reject(new Error('Summarization cancelled by user'));
+																	reject(new Error(STR_SUMMARIZATION_CANCELLED_BY_USER));
 																}
 															},
 															buttons: [
@@ -435,7 +439,7 @@
 												
 												// ninja focus touch <
 												// Don't show error if user cancelled
-												if (error?.message !== 'Summarization cancelled by user') {
+												if (error?.message !== STR_SUMMARIZATION_CANCELLED_BY_USER) {
 													q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
 												}
 												// ninja focus touch >
