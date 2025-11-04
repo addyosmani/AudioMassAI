@@ -353,10 +353,58 @@
 
 													return summary;
 												} else {
+													// ninja focus touch <
 													// Fallback (Firefox/Safari or unavailable)
-													const summary = await fallbackSummarization(text);
-													
-													return summary;
+													// Show confirmation modal before downloading model
+													return new Promise((resolve, reject) => {
+														let isConfirmed = false;
+														const confirmationModal = new PKSimpleModal({
+															title: 'Confirm Model Download',
+															clss: 'pk_modal_anim',
+															body: '<p>Summarization requires downloading a ~462MB model. Proceed?</p>',
+															setup: function (confirmation_instance) {
+																q.ui.InteractionHandler.checkAndSet('modal');
+																q.ui.KeyHandler.addCallback('modalTemp', function (e) {
+																	confirmation_instance.Destroy();
+																}, [27]);
+																
+																// Override the default CANCEL button behavior
+																const cancelButton = confirmation_instance.el.getElementsByClassName('pk_modal_cancel')[0];
+																if (cancelButton) {
+																	cancelButton.onclick = function() {
+																		confirmation_instance.Destroy();
+																	};
+																}
+															},
+															ondestroy: function (confirmation_instance) {
+																q.ui.InteractionHandler.on = false;
+																q.ui.KeyHandler.removeCallback('modalTemp');
+																
+																// If not confirmed, reject the promise
+																if (!isConfirmed) {
+																	reject(new Error('Summarization cancelled by user'));
+																}
+															},
+															buttons: [
+																{
+																	title: 'Yes',
+																	clss: 'pk_modal_a_accpt',
+																	callback: async function (confirmation_instance) {
+																		isConfirmed = true;
+																		confirmation_instance.Destroy();
+																		try {
+																			const summary = await fallbackSummarization(text);
+																			resolve(summary);
+																		} catch (error) {
+																			reject(error);
+																		}
+																	}
+																}
+															]
+														});
+														confirmationModal.Show();
+													});
+													// ninja focus touch >
 												}
 											}
 
@@ -385,7 +433,12 @@
 												updateSubTitle(modal_instance.el_body, '');
 												removeProgressBars(modal_instance.el_body);
 												
-												q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
+												// ninja focus touch <
+												// Don't show error if user cancelled
+												if (error?.message !== 'Summarization cancelled by user') {
+													q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
+												}
+												// ninja focus touch >
 												return;
 											}
 										}

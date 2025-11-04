@@ -4,7 +4,9 @@ env.allowLocalModels = false;
 
 class PipelineSingleton {
     static task = 'summarization';
+    // ninja focus touch <
     static model = 'Xenova/bart-large-cnn';
+    // ninja focus touch >
     static instance = null;
 
     static async getInstance(progress_callback = null) {
