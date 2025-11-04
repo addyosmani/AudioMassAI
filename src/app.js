@@ -323,9 +323,7 @@
 												return await self.Summarizer.create(options);
 											}
 
-											// ninja focus touch <
 											const STR_SUMMARIZATION_CANCELLED_BY_USER = 'Summarization cancelled by user';
-											// ninja focus touch >
 											
 											async function summarize(text) {
 												// Try Chrome's built-in Summarizer API
@@ -357,7 +355,6 @@
 
 													return summary;
 												} else {
-													// ninja focus touch <
 													// Fallback (Firefox/Safari or unavailable)
 													// Show confirmation modal before downloading model
 													return new Promise((resolve, reject) => {
@@ -404,7 +401,6 @@
 														});
 														confirmationModal.Show();
 													});
-													// ninja focus touch >
 												}
 											}
 
@@ -433,12 +429,10 @@
 												updateSubTitle(modal_instance.el_body, '');
 												removeProgressBars(modal_instance.el_body);
 												
-												// ninja focus touch <
 												// Don't show error if user cancelled
 												if (error?.message !== STR_SUMMARIZATION_CANCELLED_BY_USER) {
 													q.fireEvent('ShowError', error?.message || 'An error occurred while summarizing the transcription. Please try again.');
 												}
-												// ninja focus touch >
 												return;
 											}
 										}
