@@ -218,7 +218,7 @@
 												button.setAttribute('aria-disabled', 'false');
 											};
 
-											const SUMMARIZATION_MODEL_SIZE = '462MB';
+											const SUMMARIZATION_MODEL_SIZE = '284MB';
 
 											// Fallback summarization function for when Chrome Summarizer API is not available
 											async function fallbackSummarization(text) {
@@ -348,7 +348,7 @@
 													// 3) Summarize (must be triggered by a user gesture)
 													// Check for user activation
 													if (!navigator.userActivation.isActive) {
-														throw new Error('User activation required for Summarizer API');
+														throw new Error('User activation required for Summarizer API. Try again.');
 													}
 
 													updateSubTitle(modal_instance.el_body, 'Summarizing transcript...');

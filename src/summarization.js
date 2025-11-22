@@ -4,7 +4,7 @@ env.allowLocalModels = false;
 
 class PipelineSingleton {
     static task = 'summarization';
-    static model = 'Xenova/bart-large-cnn';
+    static model = 'Xenova/distilbart-cnn-6-6';
     static instance = null;
 
     static async getInstance(progress_callback = null) {
