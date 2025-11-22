@@ -251,7 +251,7 @@
 																break;
 															}
 															case 'complete': {
-																updateSubTitle(modal_instance.el_body, '');
+																updateSubTitle(modal_instance.el_body, 'Summarized using offline model (quality may vary)');
 
 																summarizationWorker.terminate();
 																resolve(summary);
@@ -292,6 +292,9 @@
 
 												// Restore button text
 												updateButtonCaption(targetButton, STR_SUMMARIZE);
+
+												// Reset subtitle
+												updateSubTitle(modal_instance.el_body, '');
 												
 												// Restore original title
 												modal_instance.el_title.innerHTML = STR_TRANSCRIPTION_ORIGINAL;
@@ -353,7 +356,7 @@
 
 													updateSubTitle(modal_instance.el_body, 'Summarizing transcript...');
 													const summary = await summarizer.summarize(text);
-													updateSubTitle(modal_instance.el_body, '');
+													updateSubTitle(modal_instance.el_body, 'Summarized using Chrome\'s built-in AI summarizer');
 
 													return summary;
 												} else {
