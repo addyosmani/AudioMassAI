@@ -70,10 +70,15 @@ This document summarizes the key takeaways, observations, and implementation lea
 
 **Quality Assessment:**
 - ❌ Summaries were **not coherent**
-- ❌ Appeared more like "random sentences" rather than meaningful summaries
+- ❌ Appeared more like "random sentences" or "hallucinated sentences" rather than meaningful summaries
 - ❌ Quality was insufficient for production use
 
-**Conclusion:** Not suitable as a fallback option.
+**Root Cause - Context Length Limitation:**
+- Model has a **~512 token context window**
+- Test transcript contained **1018 tokens** (exceeds context window by ~2x)
+- When transcripts exceed the context window, models lose track and produce hallucinations or unrelated sentences
+
+**Conclusion:** Not suitable as a fallback option, especially for longer transcripts.
 
 ### 3.3 `Xenova/distilbart-cnn-6-6`
 
@@ -82,7 +87,35 @@ This document summarizes the key takeaways, observations, and implementation lea
 - ⚠️ Quality is acceptable but noticeably inferior to Chrome's native API
 - ⚠️ Requires ~284MB download and memory overhead
 
-**Conclusion:** Acceptable fallback but quality trade-off is significant. Reinforces the case for relying on Chrome Summarizer API where available.
+**Root Cause - Context Length Limitation:**
+- Model also has a **~512 token context window** (same limitation as T5-small)
+- Same hallucination issues occur when transcripts exceed the context window
+- Test transcript (1018 tokens) exceeded the context window, leading to degraded output quality
+
+**Conclusion:** Acceptable fallback but quality trade-off is significant, especially for longer transcripts. Reinforces the case for relying on Chrome Summarizer API where available.
+
+### 3.4 Context Length Limitations & Chunking Experiment
+
+**Problem:**
+- Both `Xenova/t5-small` and `Xenova/distilbart-cnn-6-6` have **~512 token context windows**
+- Real-world transcripts often exceed this limit (test case: 1018 tokens)
+- When transcripts exceed the context window, models produce:
+  - Hallucinated sentences
+  - Unrelated or random content
+  - Loss of coherence and topic awareness
+
+**Chunking + Hierarchical Summarization Experiment:**
+- **Approach:** Split transcript into chunks that fit within 512 token limit, summarize each chunk, then summarize the summaries
+- **Implementation:** Quickly implemented a demo to test this approach
+- **Results:** Despite multiple iterations, **satisfactory outcomes were not achieved**
+- **Complexity:** Would require sophisticated implementation and extensive testing to ensure quality
+
+**Decision:**
+- Since the primary goal isn't to handle long-text summarization perfectly, a **practical approach** is preferred
+- **Recommendation:** Show a warning or limitation message to users when texts exceed the context window
+- This avoids complex chunking implementation while setting proper user expectations
+
+**Key Insight:** Context window limitations are a fundamental constraint for browser-based transformer models. Chrome's Summarizer API handles longer contexts better, making it even more valuable as the primary solution.
 
 ---
 
@@ -116,6 +149,7 @@ Based on testing and discussion:
    - Requires user confirmation before download
    - Shows progress during model loading
    - Quality warning displayed to users
+   - **Context length limitation:** Should warn users when transcripts exceed ~512 tokens
 
 ### 5.2 Strategic Considerations
 
@@ -150,6 +184,12 @@ Based on testing and discussion:
    - Quality trade-offs must be communicated clearly
    - User consent should be obtained before download
 
+4. **Context length limitations are a critical constraint**
+   - Browser-based transformer models (~512 token context windows) struggle with longer transcripts
+   - Exceeding context windows causes hallucinations and degraded quality
+   - Chunking + hierarchical summarization is complex and didn't yield satisfactory results in testing
+   - **Practical solution:** Warn users about context length limitations rather than implementing complex chunking
+
 ### 6.2 Implementation Patterns
 
 **Worker-Based Architecture:**
@@ -171,8 +211,13 @@ Based on testing and discussion:
 - **Quantitative Memory Profiling:** Measure actual memory usage of `Xenova/distilbart-cnn-6-6` during load and inference
 - **Quality Metrics:** Establish quantitative quality metrics for comparing summarization outputs
 - **Mobile Testing:** Test fallback behavior on actual mobile devices
-- **Alternative Models:** Continue evaluating smaller, higher-quality models as they become available
+- **Alternative Models:** Continue evaluating smaller, higher-quality models with longer context windows as they become available
+- **Context Length Warning:** Implement user-facing warnings when transcripts exceed model context windows (~512 tokens)
+- **Transcript Length Detection:** Add token counting to detect when transcripts may exceed context limits
 
 ### 7.2 Open Questions
 
 - Can we improve `Xenova/distilbart-cnn-6-6` quality with better prompt engineering or parameters?
+- What is the optimal token threshold for showing context length warnings?
+- Should we implement transcript truncation as an option for users with very long transcripts?
+- Are there alternative models with longer context windows that could serve as better fallbacks?
