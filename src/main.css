@@ -953,7 +953,7 @@ a{cursor:pointer;color:#99c2c6;-webkit-tap-highlight-color:rgba(0,0,0,0)}
     background:#222;
 }
 
-.pk_modal_a_bottom{
+.pk_modal_a_bottom {
     float: right;
     display: block;
     padding: 4px 10px;
@@ -961,7 +961,7 @@ a{cursor:pointer;color:#99c2c6;-webkit-tap-highlight-color:rgba(0,0,0,0)}
     border-radius: 21px;
 	color:#eee;
     font-size: 12px;
-	margin-left: 16px;
+	margin-left: 6px;
 	-webkit-user-select:none;
 	user-select:none;
 }
@@ -2021,6 +2021,8 @@ body.pk_stndln{
     width: 100%;
     background-color: #ddd;
     border-radius: 4px;
+	max-width: 480px;
+	margin-bottom: 8px;
 }
 
 .pk_progress_bar {
@@ -2028,7 +2030,9 @@ body.pk_stndln{
     height: 20px;
     background-color: #4CAF50;
     border-radius: 4px;
-    text-align: center;
     line-height: 20px;
-    color: white;
+    color: black;
+	transition: all 0.3s ease-out;
+	white-space: nowrap;
+	font-size: 0.75rem;
 }

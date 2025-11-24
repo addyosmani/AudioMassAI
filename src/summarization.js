@@ -1,12 +1,10 @@
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js';
 
-// Skip local model check
 env.allowLocalModels = false;
 
-// Use the Singleton pattern to enable lazy construction of the pipeline
 class PipelineSingleton {
-    static task = 'automatic-speech-recognition';
-    static model = 'Xenova/whisper-tiny.en';
+    static task = 'summarization';
+    static model = 'Xenova/distilbart-cnn-6-6';
     static instance = null;
 
     static async getInstance(progress_callback = null) {
@@ -18,36 +16,34 @@ class PipelineSingleton {
 }
 
 self.addEventListener('message', async event => {
-    const { audio, sampling_rate } = event.data;
+    const { text } = event.data;
 
-    if (!audio) {
+    if (!text || typeof text !== 'string') {
         self.postMessage({
             status: 'error',
-            message: 'No audio data received.'
+            message: 'No text data received or invalid format.'
         });
         return;
     }
 
     try {
-        const transcriber = await PipelineSingleton.getInstance(modelState => {
+        const summarizer = await PipelineSingleton.getInstance(modelState => {
             self.postMessage(modelState);
         });
-        
-        // Ensure Float32Array
-        const pcm = audio instanceof Float32Array ? audio : new Float32Array(audio);
 
-        const output = await transcriber(pcm, {
-            sampling_rate,
-            chunk_length_s: 30,
-            stride_length_s: 5
+        const output = await summarizer(text, {
+            max_length: 150,
+            min_length: 40
         });
+
+        const summary = output[0].summary_text.trim();
 
         self.postMessage({
             status: 'complete',
-            transcript: output.text.trim()
+            summary
         });
     } catch (error) {
-        console.error('Transcription error:', error);
+        console.error('Summarization error:', error);
         self.postMessage({
             status: 'error',
             message: error.message
