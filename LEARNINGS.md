@@ -12,12 +12,14 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 1.1 `Xenova/bart-large-cnn` Memory Behavior
 
 **Findings:**
+
 - Loading `Xenova/bart-large-cnn` causes the system to become unresponsive during the initial model load
 - Once loaded, subsequent summarizations no longer cause unresponsiveness
 - The initial loading phase is the primary bottleneck and can lock a **32GB RAM desktop for several minutes**
 - Model size: **~462MB**
 
 **Impact:**
+
 - Not viable for production environments
 - Not suitable for environments with limited resources
 - Mobile support was explicitly a concern (completely unusable on mobile devices)
@@ -27,6 +29,7 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 1.2 `Xenova/distilbart-cnn-6-6` Fallback Exploration
 
 **Findings:**
+
 - Tested as a smaller fallback alternative to `Xenova/bart-large-cnn`
 - On desktop testing, `Xenova/distilbart-cnn-6-6` does **not** make the device unresponsive
 - Significantly less memory-intensive than `Xenova/bart-large-cnn` during loading
@@ -45,6 +48,7 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 2.1 API Behavior & Warnings
 
 **Findings:**
+
 - The project sets `outputLanguage` in the API configuration
 - Despite setting `outputLanguage`, a warning still appears in the console
 - The API successfully outputs the requested language (verified with Spanish output in testing)
@@ -59,6 +63,7 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 3.1 Browser-Native Summarizer API
 
 **Quality Assessment:**
+
 - ✅ Produces **good-quality summaries** in general
 - ✅ Fast performance
 - ✅ Zero memory overhead for users
@@ -70,11 +75,13 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 3.2 `Xenova/t5-small`
 
 **Quality Assessment:**
+
 - ❌ Summaries were **not coherent**
 - ❌ Appeared more like "random sentences" or "hallucinated sentences" rather than meaningful summaries
 - ❌ Quality was insufficient for production use
 
 **Root Cause - Context Length Limitation:**
+
 - Model has a **~512 token context window**
 - Test transcript contained **1018 tokens** (exceeds context window by ~2x)
 - When transcripts exceed the context window, models lose track and produce hallucinations or unrelated sentences
@@ -84,11 +91,13 @@ This document summarizes the key takeaways, observations, and implementation lea
 ### 3.3 `Xenova/distilbart-cnn-6-6`
 
 **Quality Assessment:**
+
 - ⚠️ Summaries did **not significantly improve quality** compared to `t5-small` for test inputs
 - ⚠️ Quality is acceptable but noticeably inferior to Chrome's native API
 - ⚠️ Requires ~284MB download and memory overhead
 
 **Root Cause - Context Length Limitation:**
+
 - Model also has a **~512 token context window** (same limitation as T5-small)
 - Same hallucination issues occur when transcripts exceed the context window
 - Test transcript (1018 tokens) exceeded the context window, leading to degraded output quality
@@ -99,6 +108,7 @@ This document summarizes the key takeaways, observations, and implementation lea
 
 **Problem Statement:**
 Both `Xenova/t5-small` and `Xenova/distilbart-cnn-6-6` have **~512 token context windows**, which is insufficient for many real-world transcripts. When transcripts exceed this limit, models produce:
+
 - Hallucinated sentences
 - Unrelated or random content
 - Loss of coherence and topic awareness
@@ -106,6 +116,7 @@ Both `Xenova/t5-small` and `Xenova/distilbart-cnn-6-6` have **~512 token context
 **Test Case:** Real-world transcript with **1018 tokens** (exceeds context window by ~2x).
 
 **Chunking + Hierarchical Summarization Experiment:**
+
 - **Approach:** Split transcript into chunks that fit within 512 token limit, summarize each chunk, then summarize the summaries
 - **Implementation:** Quickly implemented a demo to test this approach
 - **Results:** Despite multiple iterations, **satisfactory outcomes were not achieved**
@@ -113,6 +124,7 @@ Both `Xenova/t5-small` and `Xenova/distilbart-cnn-6-6` have **~512 token context
 
 **Decision:**
 Since the primary goal isn't to handle long-text summarization perfectly, a **practical approach** is preferred:
+
 - Show a warning or limitation message to users when texts exceed the context window
 - This avoids complex chunking implementation while setting proper user expectations
 
@@ -125,6 +137,7 @@ Since the primary goal isn't to handle long-text summarization perfectly, a **pr
 ### 4.1 UI Enhancements
 
 **Implemented Changes:**
+
 - ✅ Improved UI to indicate which API/model is being used:
   - Chrome API: "Summarized using Chrome's built-in AI summarizer"
   - Fallback: "Summarized using offline model (quality may vary)"
@@ -140,11 +153,13 @@ Since the primary goal isn't to handle long-text summarization perfectly, a **pr
 ### 5.1 Current Strategy
 
 **Primary:** Use Chrome Summarizer API where available
+
 - Feature detection: `'Summarizer' in self`
 - Availability check: `await self.Summarizer.availability()`
 - User activation required: `navigator.userActivation.isActive`
 
 **Fallback:** `Xenova/distilbart-cnn-6-6` for browsers without native API
+
 - Requires user confirmation before download
 - Shows progress during model loading
 - Quality warning displayed to users
@@ -153,11 +168,13 @@ Since the primary goal isn't to handle long-text summarization perfectly, a **pr
 ### 5.2 Strategic Considerations
 
 **Model Suitability Summary:**
+
 - ❌ `Xenova/bart-large-cnn`: Unsuitable due to severe memory load (~462MB)
 - ⚠️ `Xenova/distilbart-cnn-6-6`: Viable fallback candidate but still heavy (~284MB) and limited context window
 - ❌ `Xenova/t5-small`: Unsuitable due to poor quality and context limitations
 
 **Future Strategy Options:**
+
 - A fallback may be **removed entirely** if reliability becomes the priority
 - A progressive, platform-aware strategy is preferred:
   - Use Chrome Summarizer API where available
@@ -193,11 +210,13 @@ Since the primary goal isn't to handle long-text summarization perfectly, a **pr
 ### 6.2 Implementation Patterns
 
 **Worker-Based Architecture:**
+
 - Summarization fallback runs in a Web Worker
 - Prevents UI blocking during model loading
 - Enables progress reporting via `postMessage`
 
 **Progressive Enhancement:**
+
 - Feature detection before API usage
 - Graceful degradation to fallback
 - Clear user communication about which method is being used
@@ -228,14 +247,15 @@ Since the primary goal isn't to handle long-text summarization perfectly, a **pr
 
 **Model Comparison:**
 
-| Model | Size | Context Window | Quality | Production Ready |
-|-------|------|----------------|---------|------------------|
-| Chrome Summarizer API | 0MB | Large | Excellent | ✅ Yes |
-| `Xenova/distilbart-cnn-6-6` | ~284MB | 512 tokens | Acceptable | ⚠️ Limited |
-| `Xenova/bart-large-cnn` | ~462MB | 1024 tokens | Good | ❌ No |
-| `Xenova/t5-small` | Small | 512 tokens | Poor | ❌ No |
+| Model                       | Size   | Context Window | Quality    | Production Ready |
+| --------------------------- | ------ | -------------- | ---------- | ---------------- |
+| Chrome Summarizer API       | 0MB    | Large          | Excellent  | ✅ Yes           |
+| `Xenova/distilbart-cnn-6-6` | ~284MB | 512 tokens     | Acceptable | ⚠️ Limited       |
+| `Xenova/bart-large-cnn`     | ~462MB | 1024 tokens    | Good       | ❌ No            |
+| `Xenova/t5-small`           | Small  | 512 tokens     | Poor       | ❌ No            |
 
 **Key Constraints:**
+
 - Browser-based transformer models: ~512 token context windows
 - Real-world transcripts often exceed 512 tokens
 - Chrome Summarizer API handles longer contexts natively

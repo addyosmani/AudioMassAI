@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AudioMass - Audio Editor</title>
+    <link href="/ico.png" rel="shortcut icon" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="AudioMass is a free full-featured web-based audio &amp; waveform editing tool"
+    />
+    <meta property="og:image" content="https://audiomass.co/icon.jpg" />
+    <meta property="og:title" content="AudioMass" />
+    <meta property="og:url" content="https://audiomass.co/" />
+    <meta
+      property="og:description"
+      content="AudioMass is a free full-featured web-based audio &amp; waveform editing tool"
+    />
+    <meta
+      name="keywords"
+      content="AudioMass, WebAudio, WaveForm, audio editing, free audio editing, audio tool, waveform editor, sound editor, open source"
+    />
+    <link rel="apple-touch-icon" href="https://audiomass.co/icon-app.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AudioMass" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@pkalogiros" />
+    <meta name="twitter:creator" content="@pkalogiros" />
+    <meta name="twitter:title" content="AudioMass - Audio Editor" />
+    <meta
+      name="twitter:description"
+      content="AudioMass is a free full-featured web-based audio &amp; waveform editing tool"
+    />
+    <meta name="twitter:image" content="https://audiomass.co/icon.jpg" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <!--
+      Vendored libraries that expect to run as classic scripts and attach
+      globals (WaveSurfer, lz4BlockCodec). The wavesurfer build is patched by
+      the AudioMass author, so it cannot be swapped for the npm package.
+      Classic scripts always execute before the deferred module entry below.
+    -->
+    <script src="/vendor/wavesurfer.js"></script>
+    <script src="/vendor/wavesurfer.regions.js"></script>
+    <script src="/vendor/lz4-block-codec-any.js"></script>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
