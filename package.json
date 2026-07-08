@@ -10,15 +10,21 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.{js,css}\" \"public/workers/*.js\" \"*.{js,json,md,html}\"",
-    "format:check": "prettier --check \"src/**/*.{js,css}\" \"public/workers/*.js\" \"*.{js,json,md,html}\""
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "format": "prettier --write \"src/**/*.{js,css}\" \"tests/**/*.js\" \"public/workers/*.js\" \"*.{js,json,md,html}\"",
+    "format:check": "prettier --check \"src/**/*.{js,css}\" \"tests/**/*.js\" \"public/workers/*.js\" \"*.{js,json,md,html}\""
   },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
+    "@playwright/test": "^1.61.0",
     "eslint": "^9.30.0",
     "eslint-config-prettier": "^10.1.0",
     "globals": "^16.3.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.6.0",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "vitest": "^4.1.10"
   }
 }
