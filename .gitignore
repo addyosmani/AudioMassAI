@@ -1,4 +1,14 @@
-
 node_modules
 .env
 /temp
+
+# build output
+/dist
+
+# test artifacts
+/test-results
+/playwright-report
+
+# editor/OS noise
+.DS_Store
+Thumbs.db

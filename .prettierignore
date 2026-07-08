@@ -1,0 +1,8 @@
+dist/
+node_modules/
+public/vendor/
+public/about.html
+public/eq.html
+public/sp.html
+temp/
+package-lock.json
